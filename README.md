@@ -4,6 +4,17 @@ This project is the authorization server for the [CPCDS Reference Server](https:
 
 ## Quickstart
 
+The quickest way to get the server up and running is by pulling the built image from docker hub.
+
+```bash
+docker pull blangley/cpcds-auth-server
+docker run -p 8180:8180 cpcds-auth-server
+```
+
+This will deploy the authorization server to http://localhost:8180.
+
+## Building locally with Docker
+
 To start the server simply build and run using docker. The container will automatically build and deploy using a tomcat server.
 
 ```bash
@@ -15,7 +26,7 @@ docker run -p 8180:8180 cpcds-auth-server
 
 This will build and deploy the authorization server to http://localhost:8180.
 
-## Manually Running
+## Manual Build and Run
 
 Clone the repo and build the server:
 
