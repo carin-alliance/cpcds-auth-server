@@ -8,7 +8,7 @@ The quickest way to get the server up and running is by pulling the built image 
 
 ```bash
 docker pull blangley/cpcds-auth-server
-docker run -p 8180:8180 cpcds-auth-server
+docker run -p 8180:8180 blangley/cpcds-auth-server
 ```
 
 This will deploy the authorization server to http://localhost:8180.
