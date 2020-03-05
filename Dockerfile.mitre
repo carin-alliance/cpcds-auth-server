@@ -1,0 +1,10 @@
+FROM gradle:jdk11
+EXPOSE 8180/tcp
+COPY --chown=gradle:gradle . /cpcds-auth-server/
+RUN keytool -import -alias mitre_ba_root -file "/cpcds-auth-server/MITRE BA Root.crt" \
+    -keystore "$JAVA_HOME/lib/security/cacerts" -storepass changeit -noprompt -trustcacerts
+RUN keytool -import -alias mitre_ba_npe_ca3 -file "/cpcds-auth-server/MITRE BA NPE CA-3.crt" \
+    -keystore "$JAVA_HOME/lib/security/cacerts" -storepass changeit -noprompt -trustcacerts
+WORKDIR /cpcds-auth-server/
+RUN gradle installBootDist
+CMD ["gradle", "bootRun"]
