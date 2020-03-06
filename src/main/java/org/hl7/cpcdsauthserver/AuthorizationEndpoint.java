@@ -40,8 +40,7 @@ public class AuthorizationEndpoint {
     final String baseUrl = App.getServiceBaseUrl(request);
 
     // Validate request and set URI params appropriately
-    // TODO: make this shared between the auth server and ehr server
-    if (!aud.equals("http://localhost:8080/cpcds-server/fhir")) // Validate the audience matches the server url
+    if (!aud.equals(App.getEhrServer())) // Validate the audience matches the server url
       attributes.addAttribute("error", "invalid_request");
     else if (!responseType.equals("code")) // Validate the response_type is code
       attributes.addAttribute("error", "invalid_request");
@@ -65,8 +64,7 @@ public class AuthorizationEndpoint {
     final String baseUrl = App.getServiceBaseUrl(request);
 
     // Validate the audience matches the server url
-    // TODO: make this shared between the auth server and ehr server
-    if (!aud.equals("http://localhost:8080/cpcds-server/fhir")) // Validate the audience matches the server url
+    if (!aud.equals(App.getEhrServer())) // Validate the audience matches the server url
       return new ResponseEntity<String>("Invalid audience", HttpStatus.BAD_REQUEST);
 
     // Validate the response_type is code
