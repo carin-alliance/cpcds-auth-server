@@ -108,3 +108,15 @@ The response to the POST is a JSON object with the following values:
 | `expires_in` | The seconds until expiration (`3600`)
 
 The `access_token` is valid for 1 hour and can be used to query protected resources from the CPCDS Server. For more details on how to use the CPCDS Server view the [README](https://github.com/carin-alliance/cpcds-server-ri).
+
+## Configuration
+
+There are a few pieces which must be configured on this server.
+
+The first is the shared secret between this server and the Auth server. By default the secret is simply "secret", but a stronger secret should be used in practice. This can be configured by setting the `jwt.secret` enviornment variable
+
+```bash
+export jwtsecret="new secret"
+```
+
+The auth server must know the EHR Server endpoint to validate the audience. This can be configured in `App.java` by changing the value of `ehrServer`.

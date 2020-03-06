@@ -13,8 +13,8 @@ public class App {
 
 	public static void main(String[] args) {
 		// Set the secret
-		if (System.getenv("jwt.secret") != null)
-			App.secret = System.getenv("jwt.secret");
+		if (System.getenv("jwtsecret") != null)
+			App.secret = System.getenv("jwtsecret");
 
 		SpringApplication.run(App.class, args);
 	}
