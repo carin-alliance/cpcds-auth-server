@@ -20,8 +20,10 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,6 +41,11 @@ public class TokenEndpoint {
     @PostMapping(value = "")
     public ResponseEntity<String> Token(HttpServletRequest request, @RequestParam(name = "grant_type") String grantType,
             @RequestParam(name = "code") String code, @RequestParam(name = "redirect_uri") String redirectURI) {
+        // Set the headers for the response
+        MultiValueMap<String, String> headers = new HttpHeaders();
+        headers.add(HttpHeaders.CACHE_CONTROL, "no-store");
+        headers.add(HttpHeaders.PRAGMA, "no-store");
+
         HashMap<String, String> response = new HashMap<String, String>();
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
@@ -47,14 +54,14 @@ public class TokenEndpoint {
             response.put("error", "invalid_client");
             response.put("error-description",
                     "Authorization header is missing, malformed, or client_id/client_secret is invalid");
-            return new ResponseEntity<String>(gson.toJson(response), HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<String>(gson.toJson(response), headers, HttpStatus.UNAUTHORIZED);
         }
 
         // Validate the grant_type is authorization_code
         if (!grantType.equals("authorization_code")) {
             response.put("error", "invalid_request");
             response.put("error_description", "grant_type must be authorization_code not " + grantType);
-            return new ResponseEntity<String>(gson.toJson(response), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<String>(gson.toJson(response), headers, HttpStatus.BAD_REQUEST);
         }
 
         String baseUrl = App.getServiceBaseUrl(request);
@@ -65,17 +72,17 @@ public class TokenEndpoint {
                 response.put("token_type", "bearer");
                 response.put("expires_in", "3600");
                 response.put("scope", "patient/*.read");
-                return new ResponseEntity<String>(gson.toJson(response), HttpStatus.OK);
+                return new ResponseEntity<String>(gson.toJson(response), headers, HttpStatus.OK);
             } else {
                 response.put("error", "invalid_request");
                 response.put("error_description", "Internal server error. Please try again");
-                return new ResponseEntity<String>(gson.toJson(response), HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<String>(gson.toJson(response), headers, HttpStatus.BAD_REQUEST);
             }
         } else {
             response.put("error", "invalid_grant");
             response.put("error_description",
                     "Unable to verify authentication code. Please make sure it is still valid");
-            return new ResponseEntity<String>(gson.toJson(response), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<String>(gson.toJson(response), headers, HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -124,11 +131,12 @@ public class TokenEndpoint {
             Algorithm algorithm = Algorithm.HMAC256(App.getSecret());
             DecodedJWT jwt = JWT.require(algorithm).build().verify(code);
             String clientId = jwt.getClaim("client_id").asString();
+            String audience = jwt.getAudience().get(0);
 
             // Create the access token JWT
             Instant oneHour = LocalDateTime.now().plusHours(1).atZone(ZoneId.systemDefault()).toInstant();
             return JWT.create().withIssuer(baseUrl).withExpiresAt(Date.from(oneHour)).withIssuedAt(new Date())
-                    .withClaim("client_id", clientId).sign(algorithm);
+                    .withAudience(audience).withClaim("client_id", clientId).sign(algorithm);
         } catch (JWTCreationException exception) {
             // Invalid Signing configuration / Couldn't convert Claims.
             System.out.println("TokenEndpoint::generateAccessToken:Unable to generate access token");

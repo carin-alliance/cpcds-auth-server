@@ -40,12 +40,13 @@ public class AuthorizationEndpoint {
     final String baseUrl = App.getServiceBaseUrl(request);
 
     // Validate request and set URI params appropriately
-    if (!aud.equals(baseUrl)) // Validate the audience matches the server url
+    // TODO: make this shared between the auth server and ehr server
+    if (!aud.equals("http://localhost:8080/cpcds-server/fhir")) // Validate the audience matches the server url
       attributes.addAttribute("error", "invalid_request");
     else if (!responseType.equals("code")) // Validate the response_type is code
       attributes.addAttribute("error", "invalid_request");
     else {
-      String code = generateAuthorizationCode(baseUrl, clientId, redirectURI);
+      String code = generateAuthorizationCode(baseUrl, clientId, redirectURI, aud);
       if (code != null) {
         attributes.addAttribute("code", code);
         attributes.addAttribute("state", state);
@@ -64,7 +65,8 @@ public class AuthorizationEndpoint {
     final String baseUrl = App.getServiceBaseUrl(request);
 
     // Validate the audience matches the server url
-    if (!aud.equals(baseUrl))
+    // TODO: make this shared between the auth server and ehr server
+    if (!aud.equals("http://localhost:8080/cpcds-server/fhir")) // Validate the audience matches the server url
       return new ResponseEntity<String>("Invalid audience", HttpStatus.BAD_REQUEST);
 
     // Validate the response_type is code
@@ -73,7 +75,7 @@ public class AuthorizationEndpoint {
 
     HashMap<String, String> response = new HashMap<String, String>();
     response.put("redirectURI", redirectURI);
-    response.put("code", generateAuthorizationCode(baseUrl, clientId, redirectURI));
+    response.put("code", generateAuthorizationCode(baseUrl, clientId, redirectURI, aud));
     response.put("state", state);
     Gson gson = new GsonBuilder().setPrettyPrinting().create();
     return new ResponseEntity<String>(gson.toJson(response), HttpStatus.OK);
@@ -86,14 +88,15 @@ public class AuthorizationEndpoint {
    * @param baseUrl     - the baseUrl for this service
    * @param clientId    - the client_id received in the GET request
    * @param redirectURI - the redirect_uri received in the GET request
+   * @param aud         - the aud received in the GET request
    * @return signed JWT token for the authorization code
    */
-  private String generateAuthorizationCode(String baseUrl, String clientId, String redirectURI) {
+  private String generateAuthorizationCode(String baseUrl, String clientId, String redirectURI, String aud) {
     try {
       Algorithm algorithm = Algorithm.HMAC256(App.getSecret());
       Instant twoMinutes = LocalDateTime.now().plusMinutes(2).atZone(ZoneId.systemDefault()).toInstant();
-      return JWT.create().withIssuer(baseUrl).withExpiresAt(Date.from(twoMinutes)).withClaim("client_id", clientId)
-          .withClaim("redirect_uri", redirectURI).sign(algorithm);
+      return JWT.create().withIssuer(baseUrl).withExpiresAt(Date.from(twoMinutes)).withAudience(aud)
+          .withClaim("client_id", clientId).withClaim("redirect_uri", redirectURI).sign(algorithm);
     } catch (JWTCreationException exception) {
       // Invalid Signing configuration / Couldn't convert Claims.
       System.out.println("AuthorizationEndpoint::generateAuthorizationCode:Unable to generate code for " + clientId);
