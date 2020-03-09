@@ -19,10 +19,6 @@ public class App {
 
 		initializeDB();
 
-		// Add a test user to the db
-		// User user = new User("blangley", "password", "1", "000");
-		// DB.write(user);
-
 		SpringApplication.run(App.class, args);
 	}
 
