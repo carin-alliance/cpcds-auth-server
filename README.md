@@ -13,6 +13,13 @@ docker run -p 8180:8180 blangley/cpcds-auth-server
 
 This will deploy the authorization server to http://localhost:8180.
 
+Note: This image includes a copy of the database with preloaded users
+| ID | Username | Password |
+|----|----------|----------|
+| 1 | user1 | password1|
+| 689 | user689 | password689 |
+| admin | admin | 123456789
+
 ## Building locally with Docker
 
 To start the server simply build and run using docker. The container will automatically build and deploy using a tomcat server.
@@ -42,6 +49,25 @@ This will build and deploy the authorization server to http://localhost:8180.
 Note: This has only been tested using Java 11.
 
 ## Authorization & Launch Sequence
+
+### POST /register
+
+Before the authorization sequence can begin the user must register with the system. The endpoint for this is `/register` and the query parameters are:
+| Parameter | Value |
+| ----------|-------|
+| `username`| User created unique identifier for the system |
+| `password`| User created password to authenticate |
+| `id` | The id of the patient associated with this user
+
+Example:
+
+```
+POST HTTP/1.1
+http://localhost:8180/register?username=blangley&
+      password=password&id=1
+```
+
+The response to the POST is 201 CREATED on success.
 
 ### GET /authorization
 
