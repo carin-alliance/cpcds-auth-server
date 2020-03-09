@@ -112,8 +112,11 @@ public class TokenEndpoint {
                     String clientId = clientAuthMatcher.group(1);
                     String clientSecret = clientAuthMatcher.group(2);
                     if (clientId != null && clientSecret != null) {
-                        System.out.println("TokenEndpoint::clientIsAuthorized:true");
-                        return true;
+                        User user = App.getDB().read(clientId);
+                        if (user.validatePassword(clientSecret)) {
+                            System.out.println("TokenEndpoint::clientIsAuthorized:true");
+                            return true;
+                        }
                     }
                 }
             }

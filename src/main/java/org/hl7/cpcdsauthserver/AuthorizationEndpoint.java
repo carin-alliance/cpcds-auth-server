@@ -47,6 +47,8 @@ public class AuthorizationEndpoint {
       attributes.addAttribute("error", "invalid_request");
     else if (!responseType.equals("code")) // Validate the response_type is code
       attributes.addAttribute("error", "invalid_request");
+    else if (!clientExists(clientId)) // Validate the user exists
+      attributes.addAttribute("error", "unauthorized_client");
     else {
       String code = generateAuthorizationCode(baseUrl, clientId, redirectURI, aud);
       System.out.println("AuthorizationEndpoint::Generated code " + code);
@@ -78,12 +80,26 @@ public class AuthorizationEndpoint {
     if (!responseType.equals("code"))
       return new ResponseEntity<String>("Invalid response_type. Must be code", HttpStatus.BAD_REQUEST);
 
+    // Validate the client exists
+    if (!clientExists(clientId))
+      return new ResponseEntity<String>("Client does not exist. Must register", HttpStatus.BAD_REQUEST);
+
     HashMap<String, String> response = new HashMap<String, String>();
     response.put("redirectURI", redirectURI);
     response.put("code", generateAuthorizationCode(baseUrl, clientId, redirectURI, aud));
     response.put("state", state);
     Gson gson = new GsonBuilder().setPrettyPrinting().create();
     return new ResponseEntity<String>(gson.toJson(response), HttpStatus.OK);
+  }
+
+  /**
+   * Helper method to determine if the client exists in the Users table
+   * 
+   * @param clientId - the clientId (username)
+   * @return true if the client is registered to use this service, false otherwise
+   */
+  private boolean clientExists(String clientId) {
+    return App.getDB().read(clientId) != null;
   }
 
   /**

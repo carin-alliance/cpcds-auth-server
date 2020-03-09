@@ -28,11 +28,17 @@ public class PasswordUtils {
      * @return Hash(password + salt)
      * @throws NoSuchAlgorithmException
      */
-    public static String hashPassword(String password, String salt) throws NoSuchAlgorithmException {
-        String p = password + salt;
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
-        byte[] hash = md.digest(p.getBytes(StandardCharsets.UTF_8));
-        return toHexString(hash);
+    public static String hashPassword(String password, String salt) {
+        try {
+            String p = password + salt;
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(p.getBytes(StandardCharsets.UTF_8));
+            return toHexString(hash);
+        } catch (NoSuchAlgorithmException e) {
+            // SHA-256 is a supported algorithm so this should never run
+            System.out.println("PasswordUtils::hashPassword:SHA-256 is not a supported algorithm");
+            return null;
+        }
     }
 
     /**

@@ -1,5 +1,6 @@
 package org.hl7.cpcdsauthserver;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -57,10 +58,10 @@ public class User {
      * 
      * @param input - plain text input password
      * @return true if input is the correct password for this user, false otherwise
+     * @throws NoSuchAlgorithmException
      */
     public boolean validatePassword(String input) {
-        // Validate Hash(input + r) = password
-        return false;
+        return PasswordUtils.hashPassword(input, this.r).equals(this.password);
     }
 
     @Override

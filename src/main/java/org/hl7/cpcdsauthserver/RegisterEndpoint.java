@@ -1,7 +1,5 @@
 package org.hl7.cpcdsauthserver;
 
-import java.security.NoSuchAlgorithmException;
-
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.http.HttpStatus;
@@ -19,8 +17,7 @@ public class RegisterEndpoint {
 
     @PostMapping("")
     public ResponseEntity<String> Register(HttpServletRequest request, @RequestParam(name = "username") String username,
-            @RequestParam(name = "password") String password, @RequestParam(name = "id") String id)
-            throws NoSuchAlgorithmException {
+            @RequestParam(name = "password") String password, @RequestParam(name = "id") String id) {
         System.out.println(
                 "RegisterEndpoint::Register: /register?username=" + username + "&password=" + password + "&id=" + id);
 

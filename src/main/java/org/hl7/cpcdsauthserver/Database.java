@@ -191,6 +191,10 @@ public class Database {
         return result;
     }
 
+    public User read(String username) {
+        return this.read(Collections.singletonMap("username", username));
+    }
+
     /**
      * Insert a user into database.
      * 
