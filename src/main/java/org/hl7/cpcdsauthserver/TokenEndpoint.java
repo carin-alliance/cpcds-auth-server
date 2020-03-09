@@ -41,6 +41,8 @@ public class TokenEndpoint {
     @PostMapping(value = "")
     public ResponseEntity<String> Token(HttpServletRequest request, @RequestParam(name = "grant_type") String grantType,
             @RequestParam(name = "code") String code, @RequestParam(name = "redirect_uri") String redirectURI) {
+        System.out.println("TokenEndpoint::Token:Received request /token?grant_type=" + grantType + "&code=" + code
+                + "&redirect_uri=" + redirectURI);
         // Set the headers for the response
         MultiValueMap<String, String> headers = new HttpHeaders();
         headers.add(HttpHeaders.CACHE_CONTROL, "no-store");
@@ -67,6 +69,7 @@ public class TokenEndpoint {
         String baseUrl = App.getServiceBaseUrl(request);
         if (authCodeIsValid(code, baseUrl, redirectURI)) {
             String token = generateAccessToken(code, baseUrl);
+            System.out.println("TokenEndpoint::Token:Generated token " + token);
             if (token != null) {
                 response.put("access_token", token);
                 response.put("token_type", "bearer");
@@ -109,11 +112,13 @@ public class TokenEndpoint {
                     String clientId = clientAuthMatcher.group(1);
                     String clientSecret = clientAuthMatcher.group(2);
                     if (clientId != null && clientSecret != null) {
+                        System.out.println("TokenEndpoint::clientIsAuthorized:true");
                         return true;
                     }
                 }
             }
         }
+        System.out.println("TokenEndpoint::clientIsAuthorized:false");
         return false;
     }
 

@@ -37,6 +37,9 @@ public class AuthorizationEndpoint {
       @RequestParam(name = "response_type") String responseType, @RequestParam(name = "client_id") String clientId,
       @RequestParam(name = "redirect_uri") String redirectURI, @RequestParam(name = "scope") String scope,
       @RequestParam(name = "state") String state, @RequestParam(name = "aud") String aud) {
+    System.out.println(
+        "AuthorizationEndpoint::Authorization:Received /authorization?response_type=" + responseType + "&client_id="
+            + clientId + "&redirect_uri=" + redirectURI + "&scope=" + scope + "&state=" + state + "&aud=" + aud);
     final String baseUrl = App.getServiceBaseUrl(request);
 
     // Validate request and set URI params appropriately
@@ -46,6 +49,7 @@ public class AuthorizationEndpoint {
       attributes.addAttribute("error", "invalid_request");
     else {
       String code = generateAuthorizationCode(baseUrl, clientId, redirectURI, aud);
+      System.out.println("AuthorizationEndpoint::Generated code " + code);
       if (code != null) {
         attributes.addAttribute("code", code);
         attributes.addAttribute("state", state);
@@ -61,6 +65,9 @@ public class AuthorizationEndpoint {
       @RequestParam(name = "response_type") String responseType, @RequestParam(name = "client_id") String clientId,
       @RequestParam(name = "redirect_uri") String redirectURI, @RequestParam(name = "scope") String scope,
       @RequestParam(name = "state") String state, @RequestParam(name = "aud") String aud) {
+    System.out.println(
+        "AuthorizationEndpoint::Authorization:Received /authorization?response_type=" + responseType + "&client_id="
+            + clientId + "&redirect_uri=" + redirectURI + "&scope=" + scope + "&state=" + state + "&aud=" + aud);
     final String baseUrl = App.getServiceBaseUrl(request);
 
     // Validate the audience matches the server url
