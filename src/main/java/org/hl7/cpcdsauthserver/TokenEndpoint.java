@@ -137,15 +137,11 @@ public class TokenEndpoint {
      */
     private String generateAccessToken(String code, String baseUrl, String clientId) {
         try {
-            // Decode the code JWT
-            Algorithm algorithm = Algorithm.HMAC256(App.getSecret());
-            DecodedJWT jwt = JWT.require(algorithm).build().verify(code);
-            String audience = jwt.getAudience().get(0);
-
             // Create the access token JWT
+            Algorithm algorithm = Algorithm.HMAC256(App.getSecret());
             Instant oneHour = LocalDateTime.now().plusHours(1).atZone(ZoneId.systemDefault()).toInstant();
             return JWT.create().withIssuer(baseUrl).withExpiresAt(Date.from(oneHour)).withIssuedAt(new Date())
-                    .withAudience(audience).withClaim("client_id", clientId).sign(algorithm);
+                    .withAudience(App.getEhrServer()).withClaim("client_id", clientId).sign(algorithm);
         } catch (JWTCreationException exception) {
             // Invalid Signing configuration / Couldn't convert Claims.
             System.out.println("TokenEndpoint::generateAccessToken:Unable to generate access token");
@@ -168,8 +164,8 @@ public class TokenEndpoint {
     private boolean authCodeIsValid(String code, String baseUrl, String redirectURI, String clientId) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(App.getSecret());
-            JWTVerifier verifier = JWT.require(algorithm).withIssuer(baseUrl).withClaim("redirect_uri", redirectURI)
-                    .build();
+            JWTVerifier verifier = JWT.require(algorithm).withIssuer(baseUrl).withAudience(baseUrl)
+                    .withClaim("redirect_uri", redirectURI).build();
             DecodedJWT jwt = verifier.verify(code);
             String clientUsername = jwt.getClaim("client_username").asString();
             User client = User.getUser(clientUsername);

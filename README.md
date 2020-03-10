@@ -143,7 +143,7 @@ JWT tokens are used throughout this process to digitally sign the Authorization 
 
 ```json
 {
-  "aud": "http://localhost:8080/cpcds-server/fhir", // Audience is the protected CPCDS server
+  "aud": "http://localhost:8180", // Audience is the this auth server
   "client_username": "user689", // The login username for this client
   "iss": "http://localhost:8180", // Issued by this auth server URL
   "redirect_uri": "http://localhost:4000/client", // redirect_uri param from request

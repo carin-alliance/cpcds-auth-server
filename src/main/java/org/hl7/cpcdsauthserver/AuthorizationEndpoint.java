@@ -50,7 +50,7 @@ public class AuthorizationEndpoint {
     else if (!clientExists(clientId)) // Validate the user exists
       attributes.addAttribute("error", "unauthorized_client");
     else {
-      String code = generateAuthorizationCode(baseUrl, clientId, redirectURI, aud);
+      String code = generateAuthorizationCode(baseUrl, clientId, redirectURI);
       System.out.println("AuthorizationEndpoint::Generated code " + code);
       if (code != null) {
         attributes.addAttribute("code", code);
@@ -87,7 +87,7 @@ public class AuthorizationEndpoint {
 
     HashMap<String, String> response = new HashMap<String, String>();
     response.put("redirectURI", redirectURI);
-    response.put("code", generateAuthorizationCode(baseUrl, clientUsername, redirectURI, aud));
+    response.put("code", generateAuthorizationCode(baseUrl, clientUsername, redirectURI));
     response.put("state", state);
     Gson gson = new GsonBuilder().setPrettyPrinting().create();
     return new ResponseEntity<String>(gson.toJson(response), HttpStatus.OK);
@@ -110,15 +110,14 @@ public class AuthorizationEndpoint {
    * @param baseUrl        - the baseUrl for this service
    * @param clientUsername - the client_id received in the GET request
    * @param redirectURI    - the redirect_uri received in the GET request
-   * @param aud            - the aud received in the GET request
    * @return signed JWT token for the authorization code
    */
-  private String generateAuthorizationCode(String baseUrl, String clientUsername, String redirectURI, String aud) {
+  private String generateAuthorizationCode(String baseUrl, String clientUsername, String redirectURI) {
     try {
       Algorithm algorithm = Algorithm.HMAC256(App.getSecret());
       Instant twoMinutes = LocalDateTime.now().plusMinutes(2).atZone(ZoneId.systemDefault()).toInstant();
       return JWT.create().withIssuer(baseUrl).withExpiresAt(Date.from(twoMinutes)).withIssuedAt(new Date())
-          .withAudience(aud).withClaim("client_username", clientUsername).withClaim("redirect_uri", redirectURI)
+          .withAudience(baseUrl).withClaim("client_username", clientUsername).withClaim("redirect_uri", redirectURI)
           .sign(algorithm);
     } catch (JWTCreationException exception) {
       // Invalid Signing configuration / Couldn't convert Claims.
