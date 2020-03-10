@@ -108,7 +108,7 @@ public class TokenEndpoint {
                 response.put("expires_in", "3600");
                 response.put("scope", "patient/*.read");
                 response.put("refresh_token", generateToken(token, baseUrl, clientId, jwtId, TokenType.REFRESH));
-                // TODO: post jwtID to database
+                App.getDB().setRefreshTokenId(clientId, jwtId);
                 return new ResponseEntity<String>(gson.toJson(response), headers, HttpStatus.OK);
             } else {
                 response.put("error", "invalid_request");
@@ -226,15 +226,19 @@ public class TokenEndpoint {
      * @return true if the refresh token is valid and false otherwise
      */
     private boolean refreshTokenIsValid(String code, String baseUrl, String clientId) {
-        // TODO: validate the jwt ID is still valid
         try {
             Algorithm algorithm = Algorithm.HMAC256(App.getSecret());
             JWTVerifier verifier = JWT.require(algorithm).withIssuer(baseUrl).withAudience(baseUrl).build();
             DecodedJWT jwt = verifier.verify(code);
+            String jwtId = jwt.getId();
             String jwtClientId = jwt.getClaim("client_id").asString();
             if (!clientId.equals(jwtClientId)) {
                 System.out.println(
                         "TokenEndpoint::Refresh token is invalid. Client ID does not match authorization header");
+                return false;
+            }
+            if (!jwtId.equals(App.getDB().readRefreshToken(clientId))) {
+                System.out.println("TokenEndpoint::Refresh token is invalid. Please reauthorize");
                 return false;
             }
         } catch (JWTVerificationException exception) {

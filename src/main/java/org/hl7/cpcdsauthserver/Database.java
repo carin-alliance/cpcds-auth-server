@@ -27,6 +27,7 @@ public class Database {
     private static String style = "";
     private static String script = "";
 
+    private static final String SET_CONCAT = ", ";
     private static final String WHERE_CONCAT = " AND ";
 
     // DB_CLOSE_DELAY=-1 maintains the DB in memory after all connections closed
@@ -169,9 +170,10 @@ public class Database {
         User result = null;
         if (constraintParams != null) {
             try (Connection connection = getConnection()) {
-                String sql = "SELECT TOP 1 r, id, username, password, timestamp FROM Users WHERE "
+                String sql = "SELECT TOP 1 r, id, username, password, timestamp, refresh_token FROM Users WHERE "
                         + generateClause(constraintParams, WHERE_CONCAT) + " ORDER BY timestamp DESC;";
-                PreparedStatement stmt = generateStatement(sql, constraintParams, connection);
+                PreparedStatement stmt = generateStatement(sql, Collections.singletonList(constraintParams),
+                        connection);
                 System.out.println("read query: " + stmt.toString());
                 ResultSet rs = stmt.executeQuery();
 
@@ -181,8 +183,9 @@ public class Database {
                     String username = rs.getString("username");
                     String password = rs.getString("password");
                     String createdDate = rs.getString("timestamp");
+                    String refreshToken = rs.getString("refresh_token");
                     System.out.println("read: " + id + "/" + username);
-                    result = new User(username, password, id, r, createdDate);
+                    result = new User(username, password, id, r, createdDate, refreshToken);
                 }
             } catch (SQLException e) {
                 System.out.println("Database::runQuery:SQLException:" + e);
@@ -193,6 +196,11 @@ public class Database {
 
     public User read(String username) {
         return this.read(Collections.singletonMap("username", username));
+    }
+
+    public String readRefreshToken(String clientId) {
+        User user = this.read(Collections.singletonMap("id", clientId));
+        return user.getRefreshToken();
     }
 
     /**
@@ -210,7 +218,7 @@ public class Database {
                 Map<String, Object> map = user.toMap();
 
                 String sql = "INSERT INTO Users (" + setColumns(map.keySet()) + ") VALUES (" + valueClause + ");";
-                PreparedStatement stmt = generateStatement(sql, map, connection);
+                PreparedStatement stmt = generateStatement(sql, Collections.singletonList(map), connection);
                 result = stmt.execute();
                 System.out.println(stmt.toString());
                 result = true;
@@ -222,21 +230,55 @@ public class Database {
     }
 
     /**
+     * Update a single column in a row to a new value
+     * 
+     * @param constraintParams - map of column to value for the SQL WHERE clause
+     * @param data             - map of column to value for the SQL SET clause
+     * @return boolean - whether or not the update was successful
+     */
+    public boolean update(Map<String, Object> constraintParams, Map<String, Object> data) {
+        System.out.println(
+                "Database::update(Users WHERE " + constraintParams.toString() + ", SET" + data.toString() + ")");
+        boolean result = false;
+        if (constraintParams != null && data != null) {
+            try (Connection connection = getConnection()) {
+                String sql = "UPDATE Users SET " + generateClause(data, SET_CONCAT)
+                        + ", timestamp = CURRENT_TIMESTAMP WHERE " + generateClause(constraintParams, WHERE_CONCAT)
+                        + ";";
+                Collection<Map<String, Object>> maps = new ArrayList<Map<String, Object>>();
+                maps.add(data);
+                maps.add(constraintParams);
+                PreparedStatement stmt = generateStatement(sql, maps, connection);
+                stmt.execute();
+                result = stmt.getUpdateCount() > 0 ? true : false;
+                System.out.println(stmt.toString());
+            } catch (SQLException e) {
+                System.out.println("Database::runQuery:SQLException:" + e);
+            }
+        }
+        return result;
+    }
+
+    public boolean setRefreshTokenId(String clientId, String jwtId) {
+        return this.update(Collections.singletonMap("id", clientId), Collections.singletonMap("refresh_token", jwtId));
+    }
+
+    /**
      * Create a SQL PreparedStatement from an SQL string and setting the strings
      * based on the maps provided.
      * 
      * @param sql        - query string with '?' denoting values to be set by the
      *                   maps.
-     * @param map        - Maps used to set the values.
+     * @param maps       - Collection of Maps used to set the values.
      * @param connection - the connection to the database.
      * @return PreparedStatement with all values set or null if the number of values
      *         provided is incorrect.
      * @throws SQLException
      */
-    private PreparedStatement generateStatement(String sql, Map<String, Object> map, Connection connection)
+    private PreparedStatement generateStatement(String sql, Collection<Map<String, Object>> maps, Connection connection)
             throws SQLException {
         int numValuesNeeded = (int) sql.chars().filter(ch -> ch == '?').count();
-        int numValues = map.size();
+        int numValues = maps.stream().reduce(0, (subtotal, element) -> subtotal + element.size(), Integer::sum);
         if (numValues != numValuesNeeded) {
             System.out.println("Database::generateStatement:Value mismatch. Need " + numValuesNeeded
                     + " values but received " + numValues);
@@ -245,16 +287,18 @@ public class Database {
 
         PreparedStatement stmt = connection.prepareStatement(sql);
         int valueIndex = 1;
-        for (Object value : map.values()) {
-            String valueStr;
-            if (value instanceof String)
-                valueStr = (String) value;
-            else if (value == null)
-                valueStr = "null";
-            else
-                valueStr = value.toString();
-            stmt.setString(valueIndex, valueStr);
-            valueIndex++;
+        for (Map<String, Object> map : maps) {
+            for (Object value : map.values()) {
+                String valueStr;
+                if (value instanceof String)
+                    valueStr = (String) value;
+                else if (value == null)
+                    valueStr = "null";
+                else
+                    valueStr = value.toString();
+                stmt.setString(valueIndex, valueStr);
+                valueIndex++;
+            }
         }
 
         return stmt;

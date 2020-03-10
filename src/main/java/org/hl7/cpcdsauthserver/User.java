@@ -11,17 +11,19 @@ public class User {
     private String username;
     private String password;
     private String createdDate;
+    private String refreshToken;
 
     public User(String username, String password, String id, String r) {
-        this(username, password, id, r, null);
+        this(username, password, id, r, null, null);
     }
 
-    public User(String username, String password, String id, String r, String createdDate) {
+    public User(String username, String password, String id, String r, String createdDate, String refreshToken) {
         this.r = r;
         this.password = password;
         this.id = id;
         this.username = username;
         this.createdDate = createdDate;
+        this.refreshToken = refreshToken;
     }
 
     public String getR() {
@@ -42,6 +44,10 @@ public class User {
 
     public String getCreatedDate() {
         return this.createdDate;
+    }
+
+    public String getRefreshToken() {
+        return this.refreshToken;
     }
 
     public static User getUser(String username) {
