@@ -52,7 +52,8 @@ public class TokenEndpoint {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
         // Validate the client is authorized
-        if (!clientIsAuthorized(request)) {
+        String clientId = clientIsAuthorized(request);
+        if (clientId == null) {
             response.put("error", "invalid_client");
             response.put("error-description",
                     "Authorization header is missing, malformed, or client_id/client_secret is invalid");
@@ -67,8 +68,8 @@ public class TokenEndpoint {
         }
 
         String baseUrl = App.getServiceBaseUrl(request);
-        if (authCodeIsValid(code, baseUrl, redirectURI)) {
-            String token = generateAccessToken(code, baseUrl);
+        if (authCodeIsValid(code, baseUrl, redirectURI, clientId)) {
+            String token = generateAccessToken(code, baseUrl, clientId);
             System.out.println("TokenEndpoint::Token:Generated token " + token);
             if (token != null) {
                 response.put("access_token", token);
@@ -91,13 +92,13 @@ public class TokenEndpoint {
 
     /**
      * Determine if the client is authorized based on the Basic Authorization
-     * header. Currently accepts all client_id and client_secret combinations
+     * header. Validates against the user's password
      * 
      * @param request - the current request
-     * @return true if the Authorization header is present and formatted correctly.
-     *         Accepts any client_secret. False otherwise
+     * @return client id if the Authorization header is present and formatted
+     *         correctly. Null otherwise.
      */
-    private boolean clientIsAuthorized(HttpServletRequest request) {
+    private String clientIsAuthorized(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null) {
             String regex = "Basic (.*)";
@@ -109,36 +110,36 @@ public class TokenEndpoint {
                 Pattern clientAuthPattern = Pattern.compile(clientAuthRegex);
                 Matcher clientAuthMatcher = clientAuthPattern.matcher(clientAuthorization);
                 if (clientAuthMatcher.find() && clientAuthMatcher.groupCount() == 2) {
-                    String clientId = clientAuthMatcher.group(1);
+                    String clientUsername = clientAuthMatcher.group(1);
                     String clientSecret = clientAuthMatcher.group(2);
-                    if (clientId != null && clientSecret != null) {
-                        User user = App.getDB().read(clientId);
+                    if (clientUsername != null && clientSecret != null) {
+                        User user = App.getDB().read(clientUsername);
                         if (user.validatePassword(clientSecret)) {
-                            System.out.println("TokenEndpoint::clientIsAuthorized:true");
-                            return true;
+                            System.out.println("TokenEndpoint::clientIsAuthorized:" + clientUsername);
+                            return user.getId();
                         }
                     }
                 }
             }
         }
         System.out.println("TokenEndpoint::clientIsAuthorized:false");
-        return false;
+        return null;
     }
 
     /**
      * Generate an access token for the user with the correct claims. Access token
      * is valid for 1 hour
      * 
-     * @param code    - the authorization code from the POST request
-     * @param baseUrl - the base url of this service
+     * @param code     - the authorization code from the POST request
+     * @param baseUrl  - the base url of this service
+     * @param clientId - the client id
      * @return access token for granted user or null
      */
-    private String generateAccessToken(String code, String baseUrl) {
+    private String generateAccessToken(String code, String baseUrl, String clientId) {
         try {
             // Decode the code JWT
             Algorithm algorithm = Algorithm.HMAC256(App.getSecret());
             DecodedJWT jwt = JWT.require(algorithm).build().verify(code);
-            String clientId = jwt.getClaim("client_id").asString();
             String audience = jwt.getAudience().get(0);
 
             // Create the access token JWT
@@ -164,12 +165,19 @@ public class TokenEndpoint {
      * @param redirectURI - the redirect_uri provided in the POST request
      * @return true if the authorization code is valid and false otherwise
      */
-    private boolean authCodeIsValid(String code, String baseUrl, String redirectURI) {
+    private boolean authCodeIsValid(String code, String baseUrl, String redirectURI, String clientId) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(App.getSecret());
             JWTVerifier verifier = JWT.require(algorithm).withIssuer(baseUrl).withClaim("redirect_uri", redirectURI)
                     .build();
-            verifier.verify(code);
+            DecodedJWT jwt = verifier.verify(code);
+            String clientUsername = jwt.getClaim("client_username").asString();
+            User client = User.getUser(clientUsername);
+            if (!clientId.equals(client.getId())) {
+                System.out.println(
+                        "TokenEndpoint::Authorization code is invalid. Client ID does not match authorization header");
+                return false;
+            }
         } catch (JWTVerificationException exception) {
             System.out.println("TokenEndpoint::Authorization code is invalid. Please obtain a new code");
             return false;

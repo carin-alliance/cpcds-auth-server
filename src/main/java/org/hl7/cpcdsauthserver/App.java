@@ -16,6 +16,7 @@ public class App {
 		// Set the secret
 		if (System.getenv("jwtsecret") != null)
 			App.secret = System.getenv("jwtsecret");
+		System.out.println("App Secret: " + App.secret);
 
 		initializeDB();
 

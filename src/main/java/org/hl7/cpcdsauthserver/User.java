@@ -44,6 +44,10 @@ public class User {
         return this.createdDate;
     }
 
+    public static User getUser(String username) {
+        return App.getDB().read(username);
+    }
+
     public Map<String, Object> toMap() {
         HashMap<String, Object> map = new HashMap<String, Object>();
         map.put("username", this.username);

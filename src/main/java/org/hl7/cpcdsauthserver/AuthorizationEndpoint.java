@@ -64,12 +64,13 @@ public class AuthorizationEndpoint {
 
   @GetMapping(value = "/test")
   public ResponseEntity<String> AuthorizationTest(HttpServletRequest request,
-      @RequestParam(name = "response_type") String responseType, @RequestParam(name = "client_id") String clientId,
-      @RequestParam(name = "redirect_uri") String redirectURI, @RequestParam(name = "scope") String scope,
-      @RequestParam(name = "state") String state, @RequestParam(name = "aud") String aud) {
+      @RequestParam(name = "response_type") String responseType,
+      @RequestParam(name = "client_id") String clientUsername, @RequestParam(name = "redirect_uri") String redirectURI,
+      @RequestParam(name = "scope") String scope, @RequestParam(name = "state") String state,
+      @RequestParam(name = "aud") String aud) {
     System.out.println(
         "AuthorizationEndpoint::Authorization:Received /authorization?response_type=" + responseType + "&client_id="
-            + clientId + "&redirect_uri=" + redirectURI + "&scope=" + scope + "&state=" + state + "&aud=" + aud);
+            + clientUsername + "&redirect_uri=" + redirectURI + "&scope=" + scope + "&state=" + state + "&aud=" + aud);
     final String baseUrl = App.getServiceBaseUrl(request);
 
     // Validate the audience matches the server url
@@ -81,12 +82,12 @@ public class AuthorizationEndpoint {
       return new ResponseEntity<String>("Invalid response_type. Must be code", HttpStatus.BAD_REQUEST);
 
     // Validate the client exists
-    if (!clientExists(clientId))
+    if (!clientExists(clientUsername))
       return new ResponseEntity<String>("Client does not exist. Must register", HttpStatus.BAD_REQUEST);
 
     HashMap<String, String> response = new HashMap<String, String>();
     response.put("redirectURI", redirectURI);
-    response.put("code", generateAuthorizationCode(baseUrl, clientId, redirectURI, aud));
+    response.put("code", generateAuthorizationCode(baseUrl, clientUsername, redirectURI, aud));
     response.put("state", state);
     Gson gson = new GsonBuilder().setPrettyPrinting().create();
     return new ResponseEntity<String>(gson.toJson(response), HttpStatus.OK);
@@ -106,21 +107,23 @@ public class AuthorizationEndpoint {
    * Generate the Authorization code for the client with a 2 minute expiration
    * time
    * 
-   * @param baseUrl     - the baseUrl for this service
-   * @param clientId    - the client_id received in the GET request
-   * @param redirectURI - the redirect_uri received in the GET request
-   * @param aud         - the aud received in the GET request
+   * @param baseUrl        - the baseUrl for this service
+   * @param clientUsername - the client_id received in the GET request
+   * @param redirectURI    - the redirect_uri received in the GET request
+   * @param aud            - the aud received in the GET request
    * @return signed JWT token for the authorization code
    */
-  private String generateAuthorizationCode(String baseUrl, String clientId, String redirectURI, String aud) {
+  private String generateAuthorizationCode(String baseUrl, String clientUsername, String redirectURI, String aud) {
     try {
       Algorithm algorithm = Algorithm.HMAC256(App.getSecret());
       Instant twoMinutes = LocalDateTime.now().plusMinutes(2).atZone(ZoneId.systemDefault()).toInstant();
-      return JWT.create().withIssuer(baseUrl).withExpiresAt(Date.from(twoMinutes)).withAudience(aud)
-          .withClaim("client_id", clientId).withClaim("redirect_uri", redirectURI).sign(algorithm);
+      return JWT.create().withIssuer(baseUrl).withExpiresAt(Date.from(twoMinutes)).withIssuedAt(new Date())
+          .withAudience(aud).withClaim("client_username", clientUsername).withClaim("redirect_uri", redirectURI)
+          .sign(algorithm);
     } catch (JWTCreationException exception) {
       // Invalid Signing configuration / Couldn't convert Claims.
-      System.out.println("AuthorizationEndpoint::generateAuthorizationCode:Unable to generate code for " + clientId);
+      System.out
+          .println("AuthorizationEndpoint::generateAuthorizationCode:Unable to generate code for " + clientUsername);
       return null;
     }
   }
