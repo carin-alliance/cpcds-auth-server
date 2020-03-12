@@ -106,6 +106,7 @@ public class TokenEndpoint {
                 response.put("access_token", accessToken);
                 response.put("token_type", "bearer");
                 response.put("expires_in", "3600");
+                response.put("patient", clientId);
                 response.put("scope", "patient/*.read");
                 response.put("refresh_token", generateToken(token, baseUrl, clientId, jwtId, TokenType.REFRESH));
                 App.getDB().setRefreshTokenId(clientId, jwtId);
