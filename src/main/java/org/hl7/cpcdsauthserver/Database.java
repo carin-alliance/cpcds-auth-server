@@ -170,7 +170,7 @@ public class Database {
         User result = null;
         if (constraintParams != null) {
             try (Connection connection = getConnection()) {
-                String sql = "SELECT TOP 1 r, id, username, password, timestamp, refresh_token FROM Users WHERE "
+                String sql = "SELECT TOP 1 r, patient_id, username, password, timestamp, refresh_token FROM Users WHERE "
                         + generateClause(constraintParams, WHERE_CONCAT) + " ORDER BY timestamp DESC;";
                 PreparedStatement stmt = generateStatement(sql, Collections.singletonList(constraintParams),
                         connection);
@@ -179,7 +179,7 @@ public class Database {
 
                 if (rs.next()) {
                     String r = rs.getString("r");
-                    String id = rs.getString("id");
+                    String id = rs.getString("patient_id");
                     String username = rs.getString("username");
                     String password = rs.getString("password");
                     String createdDate = rs.getString("timestamp");
@@ -198,8 +198,8 @@ public class Database {
         return this.read(Collections.singletonMap("username", username));
     }
 
-    public String readRefreshToken(String clientId) {
-        User user = this.read(Collections.singletonMap("id", clientId));
+    public String readRefreshToken(String patientId) {
+        User user = this.read(Collections.singletonMap("patient_id", patientId));
         return user.getRefreshToken();
     }
 
@@ -260,7 +260,8 @@ public class Database {
     }
 
     public boolean setRefreshTokenId(String clientId, String jwtId) {
-        return this.update(Collections.singletonMap("id", clientId), Collections.singletonMap("refresh_token", jwtId));
+        return this.update(Collections.singletonMap("patient_id", clientId),
+                Collections.singletonMap("refresh_token", jwtId));
     }
 
     /**

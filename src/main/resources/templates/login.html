@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>LogOn</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  </head>
+  <body>
+    <form>
+      <input id="username" type="text" />
+      <input id="password" type="password" />
+      <button type="button" onclick="login()">Log On</button>
+    </form>
+
+    <script>
+      function login() {
+        let urlParams = new URLSearchParams(window.location.search);
+
+        window.location =
+          window.location.search +
+          "&username=" +
+          document.getElementById("username").value +
+          "&password=" +
+          document.getElementById("password").value;
+      }
+    </script>
+  </body>
+</html>

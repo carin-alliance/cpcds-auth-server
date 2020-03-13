@@ -6,6 +6,7 @@ bin/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**
 !**/src/test/**
+.DS_STORE
 
 ### Ignore CRTS ###
 *.crt

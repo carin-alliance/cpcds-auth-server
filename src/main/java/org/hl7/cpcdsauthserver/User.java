@@ -7,20 +7,20 @@ import java.util.Map;
 public class User {
 
     private String r;
-    private String id;
     private String username;
     private String password;
+    private String patientId;
     private String createdDate;
     private String refreshToken;
 
-    public User(String username, String password, String id, String r) {
-        this(username, password, id, r, null, null);
+    public User(String username, String password, String patientId, String r) {
+        this(username, password, patientId, r, null, null);
     }
 
-    public User(String username, String password, String id, String r, String createdDate, String refreshToken) {
+    public User(String username, String password, String patientId, String r, String createdDate, String refreshToken) {
         this.r = r;
         this.password = password;
-        this.id = id;
+        this.patientId = patientId;
         this.username = username;
         this.createdDate = createdDate;
         this.refreshToken = refreshToken;
@@ -30,8 +30,8 @@ public class User {
         return this.r;
     }
 
-    public String getId() {
-        return this.id;
+    public String getPatientId() {
+        return this.patientId;
     }
 
     public String getUsername() {
@@ -58,7 +58,7 @@ public class User {
         HashMap<String, Object> map = new HashMap<String, Object>();
         map.put("username", this.username);
         map.put("password", this.password);
-        map.put("id", this.id);
+        map.put("patient_id", this.patientId);
         map.put("r", this.r);
         return map;
     }
@@ -76,6 +76,6 @@ public class User {
 
     @Override
     public String toString() {
-        return "User " + this.username + "(" + this.id + "): password(" + this.password + ")";
+        return "User " + this.username + "(" + this.patientId + "): password(" + this.password + ")";
     }
 }

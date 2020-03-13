@@ -17,13 +17,13 @@ public class RegisterEndpoint {
 
     @PostMapping("")
     public ResponseEntity<String> Register(HttpServletRequest request, @RequestParam(name = "username") String username,
-            @RequestParam(name = "password") String password, @RequestParam(name = "id") String id) {
-        System.out.println(
-                "RegisterEndpoint::Register: /register?username=" + username + "&password=" + password + "&id=" + id);
+            @RequestParam(name = "password") String password, @RequestParam(name = "patientId") String patientId) {
+        System.out.println("RegisterEndpoint::Register: /register?username=" + username + "&password=" + password
+                + "&patientId=" + patientId);
 
         String r = PasswordUtils.generateSalt(10);
         String hashedPassword = PasswordUtils.hashPassword(password, r);
-        User user = new User(username, hashedPassword, id, r);
+        User user = new User(username, hashedPassword, patientId, r);
 
         if (App.getDB().write(user))
             return new ResponseEntity<String>("Success", HttpStatus.CREATED);

@@ -84,21 +84,21 @@ public class TokenEndpoint {
         }
 
         // Validate the grant_type is authorization_code or refresh_token
-        boolean tokenIsValid = false;
+        String patientId = null;
         if (grantType.equals("authorization_code")) {
             // Request is to trade authorization_code for access token
-            tokenIsValid = authCodeIsValid(token, baseUrl, redirectURI, clientId);
+            patientId = authCodeIsValid(token, baseUrl, redirectURI, clientId);
         } else if (grantType.equals("refresh_token")) {
             // Request is to trade refresh_token for access token
-            tokenIsValid = refreshTokenIsValid(token, baseUrl, clientId);
+            patientId = refreshTokenIsValid(token, baseUrl, clientId);
         } else {
             response.put("error", "invalid_request");
             response.put("error_description", "grant_type must be authorization_code not " + grantType);
             return new ResponseEntity<String>(gson.toJson(response), headers, HttpStatus.BAD_REQUEST);
         }
 
-        if (tokenIsValid) {
-            String accessToken = generateToken(token, baseUrl, clientId, UUID.randomUUID().toString(),
+        if (patientId != null) {
+            String accessToken = generateToken(token, baseUrl, clientId, patientId, UUID.randomUUID().toString(),
                     TokenType.ACCESS);
             System.out.println("TokenEndpoint::Token:Generated token " + accessToken);
             if (accessToken != null) {
@@ -106,9 +106,10 @@ public class TokenEndpoint {
                 response.put("access_token", accessToken);
                 response.put("token_type", "bearer");
                 response.put("expires_in", "3600");
-                response.put("patient", clientId);
+                response.put("patient", patientId);
                 response.put("scope", "patient/*.read");
-                response.put("refresh_token", generateToken(token, baseUrl, clientId, jwtId, TokenType.REFRESH));
+                response.put("refresh_token",
+                        generateToken(token, baseUrl, clientId, patientId, jwtId, TokenType.REFRESH));
                 App.getDB().setRefreshTokenId(clientId, jwtId);
                 return new ResponseEntity<String>(gson.toJson(response), headers, HttpStatus.OK);
             } else {
@@ -125,11 +126,10 @@ public class TokenEndpoint {
 
     /**
      * Determine if the client is authorized based on the Basic Authorization
-     * header. Validates against the user's password
+     * header. Currently accepts all clients
      * 
      * @param request - the current request
-     * @return client id if the Authorization header is present and formatted
-     *         correctly. Null otherwise.
+     * @return the clientId from the authorization header
      */
     private String clientIsAuthorized(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
@@ -143,14 +143,10 @@ public class TokenEndpoint {
                 Pattern clientAuthPattern = Pattern.compile(clientAuthRegex);
                 Matcher clientAuthMatcher = clientAuthPattern.matcher(clientAuthorization);
                 if (clientAuthMatcher.find() && clientAuthMatcher.groupCount() == 2) {
-                    String clientUsername = clientAuthMatcher.group(1);
+                    String clientId = clientAuthMatcher.group(1);
                     String clientSecret = clientAuthMatcher.group(2);
-                    if (clientUsername != null && clientSecret != null) {
-                        User user = App.getDB().read(clientUsername);
-                        if (user.validatePassword(clientSecret)) {
-                            System.out.println("TokenEndpoint::clientIsAuthorized:" + clientUsername);
-                            return user.getId();
-                        }
+                    if (clientId != null && clientSecret != null) {
+                        return clientId;
                     }
                 }
             }
@@ -165,12 +161,14 @@ public class TokenEndpoint {
      * 
      * @param code      - the authorization code from the POST request
      * @param baseUrl   - the base url of this service
-     * @param clientId  - the client id
+     * @param clientId  - the id of the requesting client
+     * @param patientId - the user's patient ID
      * @param jwtId     - the unique id for this token
      * @param tokenType - the type of token to generate
      * @return access token for granted user or null
      */
-    private String generateToken(String code, String baseUrl, String clientId, String jwtId, TokenType tokenType) {
+    private String generateToken(String code, String baseUrl, String clientId, String patientId, String jwtId,
+            TokenType tokenType) {
         try {
             // Create the access token JWT
             Algorithm algorithm = Algorithm.HMAC256(App.getSecret());
@@ -179,7 +177,8 @@ public class TokenEndpoint {
                     ? LocalDateTime.now().plusHours(1).atZone(ZoneId.systemDefault()).toInstant()
                     : LocalDateTime.now().plusDays(30).atZone(ZoneId.systemDefault()).toInstant();
             return JWT.create().withIssuer(baseUrl).withExpiresAt(Date.from(exp)).withIssuedAt(new Date())
-                    .withAudience(aud).withClaim("client_id", clientId).withJWTId(jwtId).sign(algorithm);
+                    .withAudience(aud).withClaim("client_id", clientId).withClaim("patient_id", patientId)
+                    .withJWTId(jwtId).sign(algorithm);
         } catch (JWTCreationException exception) {
             // Invalid Signing configuration / Couldn't convert Claims.
             System.out.println("TokenEndpoint::generateToken:Unable to generate token");
@@ -197,26 +196,27 @@ public class TokenEndpoint {
      * @param code        - the authorization code
      * @param baseUrl     - the base URL of this service
      * @param redirectURI - the redirect_uri provided in the POST request
-     * @return true if the authorization code is valid and false otherwise
+     * @return patientId if the authorization code is valid and null otherwise
      */
-    private boolean authCodeIsValid(String code, String baseUrl, String redirectURI, String clientId) {
+    private String authCodeIsValid(String code, String baseUrl, String redirectURI, String clientId) {
+        String patientId = null;
         try {
             Algorithm algorithm = Algorithm.HMAC256(App.getSecret());
             JWTVerifier verifier = JWT.require(algorithm).withIssuer(baseUrl).withAudience(baseUrl)
                     .withClaim("redirect_uri", redirectURI).build();
             DecodedJWT jwt = verifier.verify(code);
-            String clientUsername = jwt.getClaim("client_username").asString();
-            User client = User.getUser(clientUsername);
-            if (!clientId.equals(client.getId())) {
+            String jwtClientId = jwt.getClaim("client_id").asString();
+            if (!clientId.equals(jwtClientId)) {
                 System.out.println(
                         "TokenEndpoint::Authorization code is invalid. Client ID does not match authorization header");
-                return false;
+            } else {
+                String username = jwt.getClaim("username").asString();
+                patientId = App.getDB().read(username).getPatientId();
             }
         } catch (JWTVerificationException exception) {
             System.out.println("TokenEndpoint::Authorization code is invalid. Please obtain a new code");
-            return false;
         }
-        return true;
+        return patientId;
     }
 
     /**
@@ -224,9 +224,10 @@ public class TokenEndpoint {
      * 
      * @param token   - the refresg token
      * @param baseUrl - the base URL of this service
-     * @return true if the refresh token is valid and false otherwise
+     * @return patientId if the refresh token is valid and null otherwise
      */
-    private boolean refreshTokenIsValid(String code, String baseUrl, String clientId) {
+    private String refreshTokenIsValid(String code, String baseUrl, String clientId) {
+        String patientId = null;
         try {
             Algorithm algorithm = Algorithm.HMAC256(App.getSecret());
             JWTVerifier verifier = JWT.require(algorithm).withIssuer(baseUrl).withAudience(baseUrl).build();
@@ -236,16 +237,17 @@ public class TokenEndpoint {
             if (!clientId.equals(jwtClientId)) {
                 System.out.println(
                         "TokenEndpoint::Refresh token is invalid. Client ID does not match authorization header");
-                return false;
+                return null;
             }
-            if (!jwtId.equals(App.getDB().readRefreshToken(clientId))) {
+
+            patientId = jwt.getClaim("patient_id").asString();
+            if (!jwtId.equals(App.getDB().readRefreshToken(patientId))) {
                 System.out.println("TokenEndpoint::Refresh token is invalid. Please reauthorize");
-                return false;
+                return null;
             }
         } catch (JWTVerificationException exception) {
             System.out.println("TokenEndpoint::Refresh token is invalid. Please reauthorize");
-            return false;
         }
-        return true;
+        return patientId;
     }
 }
