@@ -38,6 +38,20 @@ public class Database {
     private static final String JDBC_OPTIONS = ";DB_CLOSE_DELAY=-1";
     private String JDBC_STRING;
 
+    public enum Table {
+        USERS("Users"), CLIENTS("Clients");
+
+        private final String value;
+
+        Table(String value) {
+            this.value = value;
+        }
+
+        public String value() {
+            return this.value;
+        }
+    }
+
     static {
         try {
             Class.forName("org.h2.Driver");
@@ -206,18 +220,21 @@ public class Database {
     /**
      * Insert a user into database.
      * 
-     * @param user - the new user to insert into the database.
-     * @return boolean - whether or not the resource was written.
+     * @param table - the Table to write the data to
+     * @param map   - key value pair of values to insert
+     * @return boolean - whether or not the data was written.
      */
-    public boolean write(User user) {
-        System.out.println("Database::write(" + user.toString() + ")");
+    private boolean write(Table table, Map<String, Object> map) {
         boolean result = false;
-        if (user != null) {
+        if (table != null && map != null) {
             try (Connection connection = getConnection()) {
-                String valueClause = "?,?,?,?";
-                Map<String, Object> map = user.toMap();
+                String valueClause = "";
+                for (int i = 0; i < map.values().size() - 1; i++)
+                    valueClause += "?,";
+                valueClause += "?";
 
-                String sql = "INSERT INTO Users (" + setColumns(map.keySet()) + ") VALUES (" + valueClause + ");";
+                String sql = "INSERT INTO " + table.value() + " (" + setColumns(map.keySet()) + ") VALUES ("
+                        + valueClause + ");";
                 PreparedStatement stmt = generateStatement(sql, Collections.singletonList(map), connection);
                 result = stmt.execute();
                 System.out.println(stmt.toString());
@@ -227,6 +244,32 @@ public class Database {
             }
         }
         return result;
+    }
+
+    /**
+     * Insert a user into database.
+     * 
+     * @param user - the new user to insert into the database.
+     * @return boolean - whether or not the user was written.
+     */
+    public boolean write(User user) {
+        System.out.println("Database::write Users(" + user.toString() + ")");
+        return write(Table.USERS, user.toMap());
+    }
+
+    /**
+     * Insert a client into database.
+     * 
+     * @param clientId     - the unique client id
+     * @param clientSecret - the secert for the client
+     * @return boolean - whether or not the client was written.
+     */
+    public boolean write(String clientId, String clientSecret) {
+        System.out.println("Database::write Clients(" + clientId + ":" + clientSecret + ")");
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("id", clientId);
+        map.put("secret", clientSecret);
+        return write(Table.CLIENTS, map);
     }
 
     /**

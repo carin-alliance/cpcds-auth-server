@@ -9,4 +9,10 @@ BEGIN TRANSACTION;
         "timestamp" datetime DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS Clients (
+        "id" varchar PRIMARY KEY,
+        "secret" varchar NOT NULL,
+        "timestamp" datetime DEFAULT CURRENT_TIMESTAMP
+    );
+
 COMMIT;
