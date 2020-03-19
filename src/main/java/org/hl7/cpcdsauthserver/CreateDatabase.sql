@@ -12,6 +12,7 @@ BEGIN TRANSACTION;
     CREATE TABLE IF NOT EXISTS Clients (
         "id" varchar PRIMARY KEY,
         "secret" varchar NOT NULL,
+        "redirect" varchar NOT NULL,
         "timestamp" datetime DEFAULT CURRENT_TIMESTAMP
     );
 

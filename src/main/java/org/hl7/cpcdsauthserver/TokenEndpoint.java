@@ -145,7 +145,8 @@ public class TokenEndpoint {
                 if (clientAuthMatcher.find() && clientAuthMatcher.groupCount() == 2) {
                     String clientId = clientAuthMatcher.group(1);
                     String clientSecret = clientAuthMatcher.group(2);
-                    if (clientId != null && clientSecret != null) {
+                    if (clientId != null && clientSecret != null && clientId.equals("0oa41ji88gUjAKHiE4x6")
+                            && clientSecret.equals("jR76UPXp6Q1cg6fM")) {
                         return clientId;
                     }
                 }
