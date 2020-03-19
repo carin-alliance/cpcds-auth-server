@@ -33,14 +33,6 @@ public class AuthorizationEndpoint {
         "AuthorizationEndpoint::Authorization:Received /authorization?response_type=" + responseType + "&client_id="
             + clientId + "&redirect_uri=" + redirectURI + "&scope=" + scope + "&state=" + state + "&aud=" + aud);
 
-    // TODO: validate the audience is the EHR server
-    // error = invalid_request
-
-    // TODO: validate response type is code
-    // error = invalid_request
-
-    // TODO: validate client is registered with the server
-    // error = unauthorized_client if unregistered
     return "login";
   }
 
@@ -56,24 +48,36 @@ public class AuthorizationEndpoint {
         + aud + "&username=" + username + "&password=" + password);
     final String baseUrl = App.getServiceBaseUrl(request);
 
-    User user = App.getDB().read(username);
-    if (user == null) {
-      attributes.addAttribute("error", "access_denied");
-      attributes.addAttribute("error_description", "user does not exist");
-    } else if (user.validatePassword(password)) {
-      System.out.println("AuthorizationEndpoint::User " + username + " is authorized");
-
-      String code = generateAuthorizationCode(baseUrl, clientId, redirectURI, username);
-      System.out.println("AuthorizationEndpoint::Generated code " + code);
-      if (code == null) {
-        attributes.addAttribute("error", "server_error");
-      } else {
-        attributes.addAttribute("code", code);
-        attributes.addAttribute("state", state);
-      }
+    if (!aud.equals(App.getEhrServer())) {
+      attributes.addAttribute("error", "invalid_request");
+      attributes.addAttribute("error_description", "aud is invalid");
+    } else if (!responseType.equals("code")) {
+      attributes.addAttribute("error", "invalid_request");
+      attributes.addAttribute("error_description", "response_type must be code");
+    } else if (!clientId.equals("0oa41ji88gUjAKHiE4x6")) {
+      // TODO: update this to use Clients Table
+      attributes.addAttribute("error", "unauthorized_client");
+      attributes.addAttribute("error_description", "client is not registered");
     } else {
-      attributes.addAttribute("error", "access_denied");
-      attributes.addAttribute("error_description", "invalid username/password");
+      User user = App.getDB().read(username);
+      if (user == null) {
+        attributes.addAttribute("error", "access_denied");
+        attributes.addAttribute("error_description", "user does not exist");
+      } else if (user.validatePassword(password)) {
+        System.out.println("AuthorizationEndpoint::User " + username + " is authorized");
+
+        String code = generateAuthorizationCode(baseUrl, clientId, redirectURI, username);
+        System.out.println("AuthorizationEndpoint::Generated code " + code);
+        if (code == null) {
+          attributes.addAttribute("error", "server_error");
+        } else {
+          attributes.addAttribute("code", code);
+          attributes.addAttribute("state", state);
+        }
+      } else {
+        attributes.addAttribute("error", "access_denied");
+        attributes.addAttribute("error_description", "invalid username/password");
+      }
     }
 
     System.out.println("Redirecting to " + redirectURI + attributes.toString());
