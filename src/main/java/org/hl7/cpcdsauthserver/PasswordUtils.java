@@ -5,8 +5,12 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class PasswordUtils {
+
+    private static final Logger logger = ServerLogger.getLogger();
 
     /**
      * Generate a random string of length n for salting the password hash
@@ -36,7 +40,7 @@ public class PasswordUtils {
             return toHexString(hash);
         } catch (NoSuchAlgorithmException e) {
             // SHA-256 is a supported algorithm so this should never run
-            System.out.println("PasswordUtils::hashPassword:SHA-256 is not a supported algorithm");
+            logger.log(Level.SEVERE, "PasswordUtils::hashPassword:SHA-256 is not a supported algorithm", e);
             return null;
         }
     }

@@ -3,6 +3,7 @@ HELP.md
 build/
 bin/
 *.db
+*.log*
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**
 !**/src/test/**

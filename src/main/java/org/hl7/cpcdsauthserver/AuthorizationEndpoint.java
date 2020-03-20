@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -23,13 +25,15 @@ import org.springframework.web.servlet.view.RedirectView;
 @Controller
 public class AuthorizationEndpoint {
 
+  private static final Logger logger = ServerLogger.getLogger();
+
   @RequestMapping(value = "/authorization", params = { "response_type", "client_id", "redirect_uri", "scope", "state",
       "aud" })
   public String Authorization(@RequestParam(name = "response_type") String responseType,
       @RequestParam(name = "client_id") String clientId, @RequestParam(name = "redirect_uri") String redirectURI,
       @RequestParam(name = "scope") String scope, @RequestParam(name = "state") String state,
       @RequestParam(name = "aud") String aud) {
-    System.out.println(
+    logger.info(
         "AuthorizationEndpoint::Authorization:Received /authorization?response_type=" + responseType + "&client_id="
             + clientId + "&redirect_uri=" + redirectURI + "&scope=" + scope + "&state=" + state + "&aud=" + aud);
 
@@ -43,7 +47,7 @@ public class AuthorizationEndpoint {
       @RequestParam(name = "redirect_uri") String redirectURI, @RequestParam(name = "scope") String scope,
       @RequestParam(name = "state") String state, @RequestParam(name = "aud") String aud,
       @RequestParam(name = "username") String username, @RequestParam(name = "password") String password) {
-    System.out.println("AuthorizationEndpoint::Authorization:Received /authorization?response_type=" + responseType
+    logger.info("AuthorizationEndpoint::Authorization:Received /authorization?response_type=" + responseType
         + "&client_id=" + clientId + "&redirect_uri=" + redirectURI + "&scope=" + scope + "&state=" + state + "&aud="
         + aud + "&username=" + username + "&password=" + password);
     final String baseUrl = App.getServiceBaseUrl(request);
@@ -64,10 +68,10 @@ public class AuthorizationEndpoint {
         attributes.addAttribute("error", "access_denied");
         attributes.addAttribute("error_description", "user does not exist");
       } else if (user.validatePassword(password)) {
-        System.out.println("AuthorizationEndpoint::User " + username + " is authorized");
+        logger.info("AuthorizationEndpoint::User " + username + " is authorized");
 
         String code = generateAuthorizationCode(baseUrl, clientId, redirectURI, username);
-        System.out.println("AuthorizationEndpoint::Generated code " + code);
+        logger.info("AuthorizationEndpoint::Generated code " + code);
         if (code == null) {
           attributes.addAttribute("error", "server_error");
         } else {
@@ -80,7 +84,7 @@ public class AuthorizationEndpoint {
       }
     }
 
-    System.out.println("Redirecting to " + redirectURI + attributes.toString());
+    logger.info("Redirecting to " + redirectURI + attributes.toString());
     return new RedirectView(redirectURI);
   }
 
@@ -103,7 +107,8 @@ public class AuthorizationEndpoint {
           .withClaim("username", username).sign(algorithm);
     } catch (JWTCreationException exception) {
       // Invalid Signing configuration / Couldn't convert Claims.
-      System.out.println("AuthorizationEndpoint::generateAuthorizationCode:Unable to generate code for " + clientId);
+      logger.log(Level.SEVERE,
+          "AuthorizationEndpoint::generateAuthorizationCode:Unable to generate code for " + clientId, exception);
       return null;
     }
   }

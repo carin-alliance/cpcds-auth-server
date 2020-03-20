@@ -1,6 +1,8 @@
 package org.hl7.cpcdsauthserver;
 
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -17,6 +19,8 @@ import java.sql.ResultSetMetaData;
  * @see https://github.com/HL7-DaVinci/prior-auth/blob/dev/src/main/java/org/hl7/davinci/priorauth/Database.java
  */
 public class Database {
+
+    private static final Logger logger = ServerLogger.getLogger();
 
     private String SQL_FILE;
     private static final String CREATE_SQL_FILE = "src/main/java/org/hl7/cpcdsauthserver/CreateDatabase.sql";
@@ -72,19 +76,19 @@ public class Database {
 
     public Database(String relativePath) {
         JDBC_STRING = JDBC_TYPE + relativePath + JDBC_FILE + JDBC_OPTIONS;
-        System.out.println("JDBC: " + JDBC_STRING);
+        logger.log(Level.FINE, "JDBC: " + JDBC_STRING);
         SQL_FILE = relativePath + CREATE_SQL_FILE;
         try (Connection connection = getConnection()) {
             String sql = new String(Files.readAllBytes(Paths.get(SQL_FILE).toAbsolutePath()));
             connection.prepareStatement(sql.replace("\"", "")).execute();
-            System.out.println(sql);
+            logger.log(Level.FINE, sql);
 
             style = new String(Files.readAllBytes(Paths.get(relativePath + styleFile).toAbsolutePath()));
             script = new String(Files.readAllBytes(Paths.get(relativePath + scriptFile).toAbsolutePath()));
         } catch (SQLException e) {
-            System.out.println("Database::Database:SQLException:" + e);
+            logger.log(Level.SEVERE, "Database::Database:SQLException", e);
         } catch (IOException e) {
-            System.out.println("Database::Database:IOException:" + e);
+            logger.log(Level.SEVERE, "Database::Database:IOException", e);
         }
     }
 
@@ -163,7 +167,7 @@ public class Database {
             }
 
         } catch (SQLException e) {
-            System.out.println("Database::runQuery:SQLException:" + e);
+            logger.log(Level.SEVERE, "Database::runQuery:SQLException", e);
         }
 
         if (outputHtml) {
@@ -180,7 +184,7 @@ public class Database {
      * @return IBaseResource - if the resource exists, otherwise null.
      */
     public User read(Map<String, Object> constraintParams) {
-        System.out.println("Database::read(Users, " + constraintParams.toString() + ")");
+        logger.info("Database::read(Users, " + constraintParams.toString() + ")");
         User result = null;
         if (constraintParams != null) {
             try (Connection connection = getConnection()) {
@@ -188,7 +192,7 @@ public class Database {
                         + generateClause(constraintParams, WHERE_CONCAT) + " ORDER BY timestamp DESC;";
                 PreparedStatement stmt = generateStatement(sql, Collections.singletonList(constraintParams),
                         connection);
-                System.out.println("read query: " + stmt.toString());
+                logger.log(Level.FINE, "read query: " + stmt.toString());
                 ResultSet rs = stmt.executeQuery();
 
                 if (rs.next()) {
@@ -198,11 +202,11 @@ public class Database {
                     String password = rs.getString("password");
                     String createdDate = rs.getString("timestamp");
                     String refreshToken = rs.getString("refresh_token");
-                    System.out.println("read: " + id + "/" + username);
+                    logger.log(Level.FINE, "read: " + id + "/" + username);
                     result = new User(username, password, id, r, createdDate, refreshToken);
                 }
             } catch (SQLException e) {
-                System.out.println("Database::runQuery:SQLException:" + e);
+                logger.log(Level.SEVERE, "Database::runQuery:SQLException", e);
             }
         }
         return result;
@@ -237,10 +241,10 @@ public class Database {
                         + valueClause + ");";
                 PreparedStatement stmt = generateStatement(sql, Collections.singletonList(map), connection);
                 result = stmt.execute();
-                System.out.println(stmt.toString());
+                logger.log(Level.FINE, stmt.toString());
                 result = true;
             } catch (SQLException e) {
-                System.out.println("Database::runQuery:SQLException:" + e);
+                logger.log(Level.SEVERE, "Database::runQuery:SQLException", e);
             }
         }
         return result;
@@ -253,7 +257,7 @@ public class Database {
      * @return boolean - whether or not the user was written.
      */
     public boolean write(User user) {
-        System.out.println("Database::write Users(" + user.toString() + ")");
+        logger.info("Database::write Users(" + user.toString() + ")");
         return write(Table.USERS, user.toMap());
     }
 
@@ -265,7 +269,7 @@ public class Database {
      * @return boolean - whether or not the client was written.
      */
     public boolean write(String clientId, String clientSecret) {
-        System.out.println("Database::write Clients(" + clientId + ":" + clientSecret + ")");
+        logger.info("Database::write Clients(" + clientId + ":" + clientSecret + ")");
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("id", clientId);
         map.put("secret", clientSecret);
@@ -280,8 +284,7 @@ public class Database {
      * @return boolean - whether or not the update was successful
      */
     public boolean update(Map<String, Object> constraintParams, Map<String, Object> data) {
-        System.out.println(
-                "Database::update(Users WHERE " + constraintParams.toString() + ", SET" + data.toString() + ")");
+        logger.info("Database::update(Users WHERE " + constraintParams.toString() + ", SET" + data.toString() + ")");
         boolean result = false;
         if (constraintParams != null && data != null) {
             try (Connection connection = getConnection()) {
@@ -294,9 +297,9 @@ public class Database {
                 PreparedStatement stmt = generateStatement(sql, maps, connection);
                 stmt.execute();
                 result = stmt.getUpdateCount() > 0 ? true : false;
-                System.out.println(stmt.toString());
+                logger.log(Level.FINE, stmt.toString());
             } catch (SQLException e) {
-                System.out.println("Database::runQuery:SQLException:" + e);
+                logger.log(Level.SEVERE, "Database::runQuery:SQLException", e);
             }
         }
         return result;
@@ -324,7 +327,7 @@ public class Database {
         int numValuesNeeded = (int) sql.chars().filter(ch -> ch == '?').count();
         int numValues = maps.stream().reduce(0, (subtotal, element) -> subtotal + element.size(), Integer::sum);
         if (numValues != numValuesNeeded) {
-            System.out.println("Database::generateStatement:Value mismatch. Need " + numValuesNeeded
+            logger.warning("Database::generateStatement:Value mismatch. Need " + numValuesNeeded
                     + " values but received " + numValues);
             return null;
         }

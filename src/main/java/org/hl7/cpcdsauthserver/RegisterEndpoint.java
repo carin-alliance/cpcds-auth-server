@@ -2,6 +2,8 @@ package org.hl7.cpcdsauthserver;
 
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -21,15 +23,17 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @RequestMapping("/register")
 public class RegisterEndpoint {
 
+    private static final Logger logger = ServerLogger.getLogger();
+
     @RequestMapping(value = "/user", method = RequestMethod.POST, consumes = { "application/json" })
     public ResponseEntity<String> RegisterUser(HttpServletRequest request, HttpEntity<String> entity) {
-        System.out.println("RegisterEndpoint::Register: /register/user");
-        System.out.println(entity.getBody());
+        logger.info("RegisterEndpoint::Register: /register/user");
+        logger.log(Level.FINE, entity.getBody());
 
         try {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             User user = gson.fromJson(entity.getBody(), User.class);
-            System.out.println(user.toString());
+            logger.log(Level.FINE, user.toString());
 
             String r = PasswordUtils.generateSalt(10);
             String hashedPassword = PasswordUtils.hashPassword(user.getPassword(), r);
@@ -40,8 +44,7 @@ public class RegisterEndpoint {
             else
                 return new ResponseEntity<String>("ERROR", HttpStatus.BAD_REQUEST);
         } catch (JsonSyntaxException e) {
-            System.out.println("RegisterEndpoint::RegisterUser:Unable to parse body");
-            System.out.println(e);
+            logger.log(Level.SEVERE, "RegisterEndpoint::RegisterUser:Unable to parse body", e);
             return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -53,7 +56,7 @@ public class RegisterEndpoint {
 
     @RequestMapping(value = "/client", method = RequestMethod.POST)
     public ResponseEntity<String> RegisterClient(HttpServletRequest request) {
-        System.out.println("RegisterEndpoint::Register: /register/client");
+        logger.info("RegisterEndpoint::Register: /register/client");
 
         HashMap<String, String> response = new HashMap<String, String>();
         Gson gson = new GsonBuilder().setPrettyPrinting().create();

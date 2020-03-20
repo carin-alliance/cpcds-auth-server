@@ -1,5 +1,7 @@
 package org.hl7.cpcdsauthserver;
 
+import java.util.logging.Logger;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.boot.SpringApplication;
@@ -10,13 +12,14 @@ public class App {
 
 	private static Database DB;
 	private static String secret = "secret";
+	private static final Logger logger = ServerLogger.getLogger();
 	private static final String ehrServer = "http://localhost:8080/cpcds-server/fhir";
 
 	public static void main(String[] args) {
 		// Set the secret
 		if (System.getenv("jwtsecret") != null)
 			App.secret = System.getenv("jwtsecret");
-		System.out.println("App Secret: " + App.secret);
+		logger.info("App Secret: " + App.secret);
 
 		initializeDB();
 
