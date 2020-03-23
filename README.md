@@ -50,9 +50,9 @@ Note: This has only been tested using Java 11.
 
 ## Authorization & Launch Sequence
 
-### POST /register
+### POST /register/user
 
-Before the authorization sequence can begin the user must register with the system. The endpoint for this is `/register` and the query parameters are:
+Before the authorization sequence can begin the user must register with the system. The endpoint for this is `/register/user` and the JSON body parameters are:
 | Parameter | Value |
 | ----------|-------|
 | `username`| User created unique identifier for the system |
@@ -63,8 +63,13 @@ Example:
 
 ```
 POST HTTP/1.1
-http://localhost:8180/register?username=blangley&
-      password=password&id=1
+http://localhost:8180/register/user
+Content-Type: application/json
+{
+      "username": "user1",
+      "password": "password1",
+      "patientId": "1"
+}
 ```
 
 The response to the POST is 201 CREATED on success.
