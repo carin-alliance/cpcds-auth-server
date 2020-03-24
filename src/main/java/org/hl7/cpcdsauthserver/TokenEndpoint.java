@@ -182,7 +182,7 @@ public class TokenEndpoint {
             TokenType tokenType) {
         try {
             // Create the access token JWT
-            Algorithm algorithm = Algorithm.HMAC256(App.getSecret());
+            Algorithm algorithm = Algorithm.RSA256(App.getPublicKey(), App.getPrivateKey());
             String aud = tokenType == TokenType.ACCESS ? App.getEhrServer() : baseUrl;
             Instant exp = tokenType == TokenType.ACCESS
                     ? LocalDateTime.now().plusHours(1).atZone(ZoneId.systemDefault()).toInstant()
@@ -212,7 +212,7 @@ public class TokenEndpoint {
     private String authCodeIsValid(String code, String baseUrl, String redirectURI, String clientId) {
         String patientId = null;
         try {
-            Algorithm algorithm = Algorithm.HMAC256(App.getSecret());
+            Algorithm algorithm = Algorithm.RSA256(App.getPublicKey(), null);
             JWTVerifier verifier = JWT.require(algorithm).withIssuer(baseUrl).withAudience(baseUrl)
                     .withClaim("redirect_uri", redirectURI).build();
             DecodedJWT jwt = verifier.verify(code);
@@ -245,7 +245,7 @@ public class TokenEndpoint {
     private String refreshTokenIsValid(String code, String baseUrl, String clientId) {
         String patientId = null;
         try {
-            Algorithm algorithm = Algorithm.HMAC256(App.getSecret());
+            Algorithm algorithm = Algorithm.RSA256(App.getPublicKey(), null);
             JWTVerifier verifier = JWT.require(algorithm).withIssuer(baseUrl).withAudience(baseUrl).build();
             DecodedJWT jwt = verifier.verify(code);
             String jwtId = jwt.getId();

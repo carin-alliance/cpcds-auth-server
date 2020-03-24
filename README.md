@@ -144,6 +144,33 @@ The response to the POST is a JSON object with the following values:
 
 The `access_token` is valid for 1 hour and can be used to query protected resources from the CPCDS Server. For more details on how to use the CPCDS Server view the [README](https://github.com/carin-alliance/cpcds-server-ri).
 
+### GET /.well-known/jwks.json
+
+The public keys used for verifying the signatures are found at this endpoint. For this RI the RSA keys do not rotate and are created at server initialization in `App.java`.
+
+Example:
+
+```
+GET http://localhost:8180/.well-known/jwks.json
+```
+
+Retuns:
+
+```json
+{
+  "keys": [
+    {
+      "kty": "RSA",
+      "e": "2542507730329925502019959402417157606871382892503593304032212496853538284138894186312740754437083011799807189636117018396940516735918014461610794552420857",
+      "use": "sig",
+      "kid": "NjVBRjY5MDlCMUIwNzU4RTA2QzZFMDQ4QzQ2MDAyQjVDNjk1RTM2Qg",
+      "alg": "RS256",
+      "n": "5690166698804597197330905768480486858877596610886363234480576904931540875874759967271069328480055496837733730620168171327423013607454238318286896004712153"
+    }
+  ]
+}
+```
+
 ## JWT Token Structure
 
 JWT tokens are used throughout this process to digitally sign the Authorization Code and the Access Token. All JWT tokens in this reference implementation utilize the HS256 algorithm. The structure of the payload for the two types of tokens are shown below:
@@ -153,11 +180,12 @@ JWT tokens are used throughout this process to digitally sign the Authorization 
 ```json
 {
   "aud": "http://localhost:8180", // Audience is the this auth server
-  "client_username": "user689", // The login username for this client
   "iss": "http://localhost:8180", // Issued by this auth server URL
   "redirect_uri": "http://localhost:4000/client", // redirect_uri param from request
   "exp": 1583853744, // Time of expiration (120s after iat)
-  "iat": 1583853624 // Issued at time
+  "iat": 1583853624, // Issued at time
+  "username": "user689", // The login username for this client
+  "client_id": "0oa41ji88gUjAKHiE4x6" // The client requesting the authorization
 }
 ```
 
@@ -169,18 +197,12 @@ JWT tokens are used throughout this process to digitally sign the Authorization 
   "iss": "http://localhost:8180", // Issued by this auth server URL
   "exp": 1583856862, // Time of expiration (3600s after iat)
   "iat": 1583853262, // Issued at time
-  "client_id": "1" // Patient ID for this client
+  "patient_id": "1", // Patient ID for this user
+  "client_id": "0oa41ji88gUjAKHiE4x6", // The client requesting the authorization
+  "jti": "7f9971da-ea43-4554-b9f7-3157a796175d" // Unique identifier for this token
 }
 ```
 
 ## Configuration
-
-There are a few pieces which must be configured on this server.
-
-The first is the shared secret between this server and the Auth server. By default the secret is simply "secret", but a stronger secret should be used in practice. This can be configured by setting the `jwt.secret` enviornment variable
-
-```bash
-export jwtsecret="new secret"
-```
 
 The auth server must know the EHR Server endpoint to validate the audience. This can be configured in `App.java` by changing the value of `ehrServer`.

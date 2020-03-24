@@ -114,7 +114,7 @@ public class AuthorizationEndpointOld {
    */
   private String generateAuthorizationCode(String baseUrl, String clientUsername, String redirectURI) {
     try {
-      Algorithm algorithm = Algorithm.HMAC256(App.getSecret());
+      Algorithm algorithm = Algorithm.RSA256(App.getPublicKey(), App.getPrivateKey());
       Instant twoMinutes = LocalDateTime.now().plusMinutes(2).atZone(ZoneId.systemDefault()).toInstant();
       return JWT.create().withIssuer(baseUrl).withExpiresAt(Date.from(twoMinutes)).withIssuedAt(new Date())
           .withAudience(baseUrl).withClaim("client_username", clientUsername).withClaim("redirect_uri", redirectURI)
