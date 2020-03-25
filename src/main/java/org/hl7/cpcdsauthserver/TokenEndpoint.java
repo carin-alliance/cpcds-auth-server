@@ -117,7 +117,7 @@ public class TokenEndpoint {
                 response.put("scope", "patient/*.read");
                 response.put("refresh_token",
                         generateToken(token, baseUrl, clientId, patientId, jwtId, TokenType.REFRESH));
-                App.getDB().setRefreshTokenId(clientId, jwtId);
+                App.getDB().setRefreshTokenId(patientId, jwtId);
                 return new ResponseEntity<String>(gson.toJson(response), headers, HttpStatus.OK);
             } else {
                 response.put("error", "invalid_request");

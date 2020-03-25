@@ -333,8 +333,8 @@ public class Database {
         return result;
     }
 
-    public boolean setRefreshTokenId(String clientId, String jwtId) {
-        return this.update(Collections.singletonMap("patient_id", clientId),
+    public boolean setRefreshTokenId(String patientId, String jwtId) {
+        return this.update(Collections.singletonMap("patient_id", patientId),
                 Collections.singletonMap("refresh_token", jwtId));
     }
 
