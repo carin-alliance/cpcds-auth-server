@@ -1,6 +1,5 @@
 package org.hl7.cpcdsauthserver;
 
-import java.util.HashMap;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequestMapping("/register")
@@ -40,9 +40,9 @@ public class RegisterEndpoint {
             User newUser = new User(user.getUsername(), hashedPassword, user.getPatientId(), r);
 
             if (App.getDB().write(newUser))
-                return new ResponseEntity<String>("Success", HttpStatus.CREATED);
+                return new ResponseEntity<String>(gson.toJson(newUser.toMap()), HttpStatus.CREATED);
             else
-                return new ResponseEntity<String>("ERROR", HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
         } catch (JsonSyntaxException e) {
             logger.log(Level.SEVERE, "RegisterEndpoint::RegisterUser:Unable to parse body", e);
             return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
@@ -51,29 +51,29 @@ public class RegisterEndpoint {
 
     @RequestMapping(value = "/user", method = RequestMethod.GET)
     public String RegisterUserPage() {
-        return "registerClient";
+        return "registerUser";
     }
 
     @RequestMapping(value = "/client", method = RequestMethod.POST)
-    public ResponseEntity<String> RegisterClient(HttpServletRequest request) {
+    public ResponseEntity<String> RegisterClient(HttpServletRequest request, HttpEntity<String> entity,
+            @RequestParam(name = "redirect_uri") String redirectUri) {
         logger.info("RegisterEndpoint::Register: /register/client");
+        logger.log(Level.FINE, entity.getBody());
 
-        HashMap<String, String> response = new HashMap<String, String>();
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
         String clientId = UUID.randomUUID().toString();
         String clientSecret = RandomStringUtils.randomAlphanumeric(256);
-        response.put("id", clientId);
-        response.put("secret", clientSecret);
+        Client newClient = new Client(clientId, clientSecret, redirectUri);
 
-        if (App.getDB().write(clientId, clientSecret))
-            return new ResponseEntity<String>(gson.toJson(response), HttpStatus.CREATED);
+        if (App.getDB().write(newClient))
+            return new ResponseEntity<String>(gson.toJson(newClient.toMap()), HttpStatus.CREATED);
         else
-            return new ResponseEntity<String>("ERROR", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<String>(HttpStatus.BAD_REQUEST);
 
     }
 
-    @RequestMapping(value = "client", method = RequestMethod.GET)
+    @RequestMapping(value = "/client", method = RequestMethod.GET)
     public String RegisterClientPage() {
         return "registerClient";
     }

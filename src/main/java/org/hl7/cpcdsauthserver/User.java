@@ -51,7 +51,7 @@ public class User {
     }
 
     public static User getUser(String username) {
-        return App.getDB().read(username);
+        return App.getDB().readUser(username);
     }
 
     public Map<String, Object> toMap() {

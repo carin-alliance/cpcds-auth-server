@@ -58,12 +58,11 @@ public class AuthorizationEndpoint {
     } else if (!responseType.equals("code")) {
       attributes.addAttribute("error", "invalid_request");
       attributes.addAttribute("error_description", "response_type must be code");
-    } else if (!clientId.equals("0oa41ji88gUjAKHiE4x6")) {
-      // TODO: update this to use Clients Table
+    } else if (Client.getClient(clientId) == null) {
       attributes.addAttribute("error", "unauthorized_client");
       attributes.addAttribute("error_description", "client is not registered");
     } else {
-      User user = App.getDB().read(username);
+      User user = User.getUser(username);
       if (user == null) {
         attributes.addAttribute("error", "access_denied");
         attributes.addAttribute("error_description", "user does not exist");

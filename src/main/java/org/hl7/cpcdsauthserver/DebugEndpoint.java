@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.hl7.cpcdsauthserver.Database.Table;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -23,7 +24,13 @@ public class DebugEndpoint {
     @GetMapping("/Users")
     public ResponseEntity<String> getUsers() {
         logger.info("GET /debug/Users");
-        return new ResponseEntity<>(App.getDB().generateAndRunQuery(), HttpStatus.OK);
+        return new ResponseEntity<>(App.getDB().generateAndRunQuery(Table.USERS), HttpStatus.OK);
+    }
+
+    @GetMapping("/Clients")
+    public ResponseEntity<String> getClients() {
+        logger.info("GET /debug/Clients");
+        return new ResponseEntity<>(App.getDB().generateAndRunQuery(Table.CLIENTS), HttpStatus.OK);
     }
 
     @GetMapping("/Log")

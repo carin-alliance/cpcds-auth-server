@@ -154,8 +154,7 @@ public class TokenEndpoint {
                     String clientId = clientAuthMatcher.group(1);
                     String clientSecret = clientAuthMatcher.group(2);
                     logger.log(Level.FINE, "TokenEndpoint::client:" + clientId + "(" + clientSecret + ")");
-                    if (clientId != null && clientSecret != null && clientId.equals("0oa41ji88gUjAKHiE4x6")
-                            && clientSecret.equals("jR76UPXp6Q1cg6fM")) {
+                    if (Client.getClient(clientId).validateSecret(clientSecret)) {
                         logger.info("TokenEndpoint::clientIsAuthorized:" + clientId);
                         return clientId;
                     }
@@ -222,7 +221,7 @@ public class TokenEndpoint {
                         "TokenEndpoint::Authorization code is invalid. Client ID does not match authorization header");
             } else {
                 String username = jwt.getClaim("username").asString();
-                patientId = App.getDB().read(username).getPatientId();
+                patientId = User.getUser(username).getPatientId();
             }
         } catch (SignatureVerificationException exception) {
             logger.log(Level.SEVERE, "TokenEndpoint::Authorization code is invalid. Signature invalid");

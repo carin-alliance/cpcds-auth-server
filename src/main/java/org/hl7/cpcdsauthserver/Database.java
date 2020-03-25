@@ -92,8 +92,8 @@ public class Database {
         }
     }
 
-    public String generateAndRunQuery() {
-        String sql = "SELECT * FROM Users ORDER BY TIMESTAMP DESC";
+    public String generateAndRunQuery(Table table) {
+        String sql = "SELECT * FROM " + table.value() + " ORDER BY TIMESTAMP DESC";
         return runQuery(sql, true, true);
     }
 
@@ -181,9 +181,9 @@ public class Database {
      * Read a specific row from the database.
      * 
      * @param constraintParams - the search constraints for the SQL query.
-     * @return IBaseResource - if the resource exists, otherwise null.
+     * @return User
      */
-    public User read(Map<String, Object> constraintParams) {
+    public User readUser(Map<String, Object> constraintParams) {
         logger.info("Database::read(Users, " + constraintParams.toString() + ")");
         User result = null;
         if (constraintParams != null) {
@@ -212,17 +212,49 @@ public class Database {
         return result;
     }
 
-    public User read(String username) {
-        return this.read(Collections.singletonMap("username", username));
+    public User readUser(String username) {
+        return this.readUser(Collections.singletonMap("username", username));
     }
 
     public String readRefreshToken(String patientId) {
-        User user = this.read(Collections.singletonMap("patient_id", patientId));
+        User user = this.readUser(Collections.singletonMap("patient_id", patientId));
         return user.getRefreshToken();
     }
 
     /**
-     * Insert a user into database.
+     * Read a sepcific row from the Clients table
+     * 
+     * @param clientId - the client ID to search for
+     * @return Client
+     */
+    public Client readClient(String clientId) {
+        logger.info("Database::read(Users " + clientId + ")");
+        Client result = null;
+        if (clientId != null) {
+            try (Connection connection = getConnection()) {
+                String sql = "SELECT TOP 1 id, secret, redirect, timestamp FROM Clients WHERE id = ? ORDER BY timestamp DESC;";
+                PreparedStatement stmt = connection.prepareStatement(sql);
+                stmt.setString(1, clientId);
+                logger.log(Level.FINE, "read query: " + stmt.toString());
+                ResultSet rs = stmt.executeQuery();
+
+                if (rs.next()) {
+                    String id = rs.getString("id");
+                    String secret = rs.getString("secret");
+                    String redirectUri = rs.getString("redirect");
+                    String createdDate = rs.getString("timestamp");
+                    logger.log(Level.FINE, "read: " + id + "/" + secret);
+                    result = new Client(id, secret, redirectUri, createdDate);
+                }
+            } catch (SQLException e) {
+                logger.log(Level.SEVERE, "Database::runQuery:SQLException", e);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Insert a row into database.
      * 
      * @param table - the Table to write the data to
      * @param map   - key value pair of values to insert
@@ -264,16 +296,12 @@ public class Database {
     /**
      * Insert a client into database.
      * 
-     * @param clientId     - the unique client id
-     * @param clientSecret - the secert for the client
+     * @param client - the new client to insert into the database.
      * @return boolean - whether or not the client was written.
      */
-    public boolean write(String clientId, String clientSecret) {
-        logger.info("Database::write Clients(" + clientId + ":" + clientSecret + ")");
-        Map<String, Object> map = new HashMap<String, Object>();
-        map.put("id", clientId);
-        map.put("secret", clientSecret);
-        return write(Table.CLIENTS, map);
+    public boolean write(Client client) {
+        logger.info("Database::write Clients(" + client.hashCode() + ")");
+        return write(Table.CLIENTS, client.toMap());
     }
 
     /**
