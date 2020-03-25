@@ -187,9 +187,9 @@ public class TokenEndpoint {
             Instant exp = tokenType == TokenType.ACCESS
                     ? LocalDateTime.now().plusHours(1).atZone(ZoneId.systemDefault()).toInstant()
                     : LocalDateTime.now().plusDays(30).atZone(ZoneId.systemDefault()).toInstant();
-            return JWT.create().withIssuer(baseUrl).withExpiresAt(Date.from(exp)).withIssuedAt(new Date())
-                    .withAudience(aud).withClaim("client_id", clientId).withClaim("patient_id", patientId)
-                    .withJWTId(jwtId).sign(algorithm);
+            return JWT.create().withKeyId(App.getKeyId()).withIssuer(baseUrl).withExpiresAt(Date.from(exp))
+                    .withIssuedAt(new Date()).withAudience(aud).withClaim("client_id", clientId)
+                    .withClaim("patient_id", patientId).withJWTId(jwtId).sign(algorithm);
         } catch (JWTCreationException exception) {
             // Invalid Signing configuration / Couldn't convert Claims.
             logger.log(Level.SEVERE, "TokenEndpoint::generateToken:Unable to generate token", exception);
