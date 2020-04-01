@@ -11,6 +11,10 @@ public class User {
     private String createdDate;
     private String refreshToken;
 
+    public User(String username, String password) {
+        this(username, password, null);
+    }
+
     public User(String username, String password, String patientId) {
         this(username, password, patientId, null, null);
     }

@@ -3,7 +3,10 @@ package org.hl7.cpcdsauthserver;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -12,13 +15,17 @@ import javax.servlet.http.HttpServletRequest;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.servlet.view.RedirectView;
 
 /**
  * Authorization endpoint for client to obtain an authorization code
@@ -41,51 +48,63 @@ public class AuthorizationEndpoint {
     return "login";
   }
 
-  @RequestMapping(value = "/authorization", params = { "response_type", "client_id", "redirect_uri", "scope", "state",
-      "aud", "username", "password" })
-  public RedirectView Authorization(HttpServletRequest request, RedirectAttributes attributes,
+  @RequestMapping(value = "/authorization", method = RequestMethod.POST, params = { "response_type", "client_id",
+      "redirect_uri", "scope", "state", "aud" })
+  public ResponseEntity<String> Authorization(HttpServletRequest request, HttpEntity<String> entity,
       @RequestParam(name = "response_type") String responseType, @RequestParam(name = "client_id") String clientId,
       @RequestParam(name = "redirect_uri") String redirectURI, @RequestParam(name = "scope") String scope,
-      @RequestParam(name = "state") String state, @RequestParam(name = "aud") String aud,
-      @RequestParam(name = "username") String username, @RequestParam(name = "password") String password) {
-    logger.info("AuthorizationEndpoint::Authorization:Received /authorization?response_type=" + responseType
-        + "&client_id=" + clientId + "&redirect_uri=" + redirectURI + "&scope=" + scope + "&state=" + state + "&aud="
-        + aud + "&username=" + username + "&password=" + password);
+      @RequestParam(name = "state") String state, @RequestParam(name = "aud") String aud) {
+    logger.info(
+        "AuthorizationEndpoint::Authorization:Received /authorization?response_type=" + responseType + "&client_id="
+            + clientId + "&redirect_uri=" + redirectURI + "&scope=" + scope + "&state=" + state + "&aud=" + aud);
     final String baseUrl = App.getServiceBaseUrl(request);
+    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    HashMap<String, String> attributes = new HashMap<String, String>();
 
+    HttpStatus status = HttpStatus.OK;
     if (!aud.equals(App.getEhrServer())) {
-      attributes.addAttribute("error", "invalid_request");
-      attributes.addAttribute("error_description", "aud is invalid");
+      status = HttpStatus.BAD_REQUEST;
+      attributes.put("error", "invalid_request");
+      attributes.put("error_description", "aud is invalid");
     } else if (!responseType.equals("code")) {
-      attributes.addAttribute("error", "invalid_request");
-      attributes.addAttribute("error_description", "response_type must be code");
+      status = HttpStatus.BAD_REQUEST;
+      attributes.put("error", "invalid_request");
+      attributes.put("error_description", "response_type must be code");
     } else if (Client.getClient(clientId) == null) {
-      attributes.addAttribute("error", "unauthorized_client");
-      attributes.addAttribute("error_description", "client is not registered");
+      status = HttpStatus.BAD_REQUEST;
+      attributes.put("error", "unauthorized_client");
+      attributes.put("error_description", "client is not registered");
     } else {
-      User user = User.getUser(username);
+      User userRequest = gson.fromJson(entity.getBody(), User.class);
+      logger.info("AuthorizationEndpoint::Authorization:Received login request from " + userRequest.getUsername());
+      User user = App.getDB().readUser(userRequest.getUsername());
       if (user == null) {
-        attributes.addAttribute("error", "access_denied");
-        attributes.addAttribute("error_description", "user does not exist");
-      } else if (BCrypt.checkpw(password, user.getPassword())) {
-        logger.info("AuthorizationEndpoint::User " + username + " is authorized");
+        status = HttpStatus.BAD_REQUEST;
+        attributes.put("error", "access_denied");
+        attributes.put("error_description", "user does not exist");
+      } else if (BCrypt.checkpw(userRequest.getPassword(), user.getPassword())) {
+        logger.info("AuthorizationEndpoint::User " + user.getUsername() + " is authorized");
 
-        String code = generateAuthorizationCode(baseUrl, clientId, redirectURI, username);
+        String code = generateAuthorizationCode(baseUrl, clientId, redirectURI, user.getUsername());
         logger.info("AuthorizationEndpoint::Generated code " + code);
         if (code == null) {
-          attributes.addAttribute("error", "server_error");
+          status = HttpStatus.INTERNAL_SERVER_ERROR;
+          attributes.put("error", "server_error");
         } else {
-          attributes.addAttribute("code", code);
-          attributes.addAttribute("state", state);
+          attributes.put("code", code);
+          attributes.put("state", state);
         }
       } else {
-        attributes.addAttribute("error", "access_denied");
-        attributes.addAttribute("error_description", "invalid username/password");
+        status = HttpStatus.UNAUTHORIZED;
+        attributes.put("error", "access_denied");
+        attributes.put("error_description", "invalid username/password");
+        logger.severe("AuthorizationEndpoint::Authorization:Failed loging attempt from " + user.getUsername());
       }
     }
 
-    logger.info("Redirecting to " + redirectURI + attributes.toString());
-    return new RedirectView(redirectURI);
+    redirectURI = getRedirect(redirectURI, attributes);
+    logger.info("Redirecting to " + redirectURI);
+    return new ResponseEntity<String>(gson.toJson(Collections.singletonMap("redirect", redirectURI)), status);
   }
 
   /**
@@ -111,6 +130,31 @@ public class AuthorizationEndpoint {
           "AuthorizationEndpoint::generateAuthorizationCode:Unable to generate code for " + clientId, exception);
       return null;
     }
+  }
+
+  /**
+   * Simple method to produce the redirect uri from the attributes
+   * 
+   * @param redirectURI - the base redirect uri
+   * @param attributes  - the attributes to add to the base redirect uri
+   * @return formatted redirect uri
+   */
+  private String getRedirect(String redirectURI, Map<String, String> attributes) {
+    if (attributes.size() > 0) {
+      redirectURI += "?";
+
+      int i = 1;
+      for (Map.Entry<String, String> entry : attributes.entrySet()) {
+        redirectURI += entry.getKey() + "=" + entry.getValue();
+
+        if (i != attributes.size())
+          redirectURI += "&";
+
+        i++;
+      }
+    }
+
+    return redirectURI;
   }
 
 }
