@@ -1,33 +1,26 @@
 package org.hl7.cpcdsauthserver;
 
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class User {
 
-    private String r;
     private String username;
     private String password;
     private String patientId;
     private String createdDate;
     private String refreshToken;
 
-    public User(String username, String password, String patientId, String r) {
-        this(username, password, patientId, r, null, null);
+    public User(String username, String password, String patientId) {
+        this(username, password, patientId, null, null);
     }
 
-    public User(String username, String password, String patientId, String r, String createdDate, String refreshToken) {
-        this.r = r;
+    public User(String username, String password, String patientId, String createdDate, String refreshToken) {
         this.password = password;
         this.patientId = patientId;
         this.username = username;
         this.createdDate = createdDate;
         this.refreshToken = refreshToken;
-    }
-
-    public String getR() {
-        return this.r;
     }
 
     public String getPatientId() {
@@ -59,19 +52,7 @@ public class User {
         map.put("username", this.username);
         map.put("password", this.password);
         map.put("patient_id", this.patientId);
-        map.put("r", this.r);
         return map;
-    }
-
-    /**
-     * Validate the input password is a match to the stored hashed password
-     * 
-     * @param input - plain text input password
-     * @return true if input is the correct password for this user, false otherwise
-     * @throws NoSuchAlgorithmException
-     */
-    public boolean validatePassword(String input) {
-        return PasswordUtils.hashPassword(input, this.r).equals(this.password);
     }
 
     @Override

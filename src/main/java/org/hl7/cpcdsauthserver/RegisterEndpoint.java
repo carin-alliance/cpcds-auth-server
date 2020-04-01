@@ -14,6 +14,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -35,9 +36,8 @@ public class RegisterEndpoint {
             User user = gson.fromJson(entity.getBody(), User.class);
             logger.log(Level.FINE, user.toString());
 
-            String r = PasswordUtils.generateSalt(10);
-            String hashedPassword = PasswordUtils.hashPassword(user.getPassword(), r);
-            User newUser = new User(user.getUsername(), hashedPassword, user.getPatientId(), r);
+            String hashedPassword = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt());
+            User newUser = new User(user.getUsername(), hashedPassword, user.getPatientId());
 
             if (App.getDB().write(newUser))
                 return new ResponseEntity<String>(gson.toJson(newUser.toMap()), HttpStatus.CREATED);

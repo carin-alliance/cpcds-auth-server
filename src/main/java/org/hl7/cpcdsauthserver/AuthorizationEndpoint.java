@@ -13,6 +13,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -66,7 +67,7 @@ public class AuthorizationEndpoint {
       if (user == null) {
         attributes.addAttribute("error", "access_denied");
         attributes.addAttribute("error_description", "user does not exist");
-      } else if (user.validatePassword(password)) {
+      } else if (BCrypt.checkpw(password, user.getPassword())) {
         logger.info("AuthorizationEndpoint::User " + username + " is authorized");
 
         String code = generateAuthorizationCode(baseUrl, clientId, redirectURI, username);

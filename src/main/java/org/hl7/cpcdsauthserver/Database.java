@@ -188,7 +188,7 @@ public class Database {
         User result = null;
         if (constraintParams != null) {
             try (Connection connection = getConnection()) {
-                String sql = "SELECT TOP 1 r, patient_id, username, password, timestamp, refresh_token FROM Users WHERE "
+                String sql = "SELECT TOP 1 patient_id, username, password, timestamp, refresh_token FROM Users WHERE "
                         + generateClause(constraintParams, WHERE_CONCAT) + " ORDER BY timestamp DESC;";
                 PreparedStatement stmt = generateStatement(sql, Collections.singletonList(constraintParams),
                         connection);
@@ -196,14 +196,13 @@ public class Database {
                 ResultSet rs = stmt.executeQuery();
 
                 if (rs.next()) {
-                    String r = rs.getString("r");
                     String id = rs.getString("patient_id");
                     String username = rs.getString("username");
                     String password = rs.getString("password");
                     String createdDate = rs.getString("timestamp");
                     String refreshToken = rs.getString("refresh_token");
                     logger.log(Level.FINE, "read: " + id + "/" + username);
-                    result = new User(username, password, id, r, createdDate, refreshToken);
+                    result = new User(username, password, id, createdDate, refreshToken);
                 }
             } catch (SQLException e) {
                 logger.log(Level.SEVERE, "Database::runQuery:SQLException", e);

@@ -23,7 +23,7 @@ Note: This image includes a copy of the database with preloaded users
 Note: This image includes a copy of the database with preloaded clients
 | ID | RedirectURI | Secret |
 |----|-------------|--------|
-| ed27a597-cfd5-4cbd-b4ed-1d213d5b38f2 | http://localhost:4000/login | a3gyqjMuNTsaDIATXmhBEOJTHY6dgY5FEAtTCUelT0yJVFfr8XgPqFSAqxKrOcrB3vgf4Xut9nV2rbnYn8XyEY7b8UPChJQGXa88954pJ34HAtUYfwVMUbIz47Wgr0CAWekcmeGL8PE2oKPcdJ4Bg150tBt4K53AQFrpf8dLo7X7cwjX4YINXosUCxWe2ojaKtjHD6a3jiRdhtPlY8uFdqtRsMV65pIFZUXVxY9yGvuf7op0ASNC2XrUGaJQqUOC
+| a12c5a8a-0288-4502-9190-5ddf79145938 | http://localhost:4000/login | N3MXICwdkqIbbkhociXxtZJ8HGu4EpHKT7X7IA6M08P1m3px7aIfBDnfdStUfjArJGqQIoWtH4my5XtkZJso9SHSuOlkhcnIqfB8zj6PqVoXbqjt6svPaCtmDR0qiCZq0g8FfqAikI5DbUkKY2LomIwLjx3Qhe7nzuOZgeap4rDU959tHqYpaD11Yvgjk2SfRXZpdkcEURMhsLVvX7AXgsbylaVyy52iwsF8nSNfjtMXenDQhj1Jxr0WlZHisQNQ
 
 ## Building locally with Docker
 
@@ -101,8 +101,8 @@ The response to the post is 201 CREATED on success with the json body:
 
 ```json
 {
-  "id": "ed27a597-cfd5-4cbd-b4ed-1d213d5b38f2",
-  "secret": "a3gyqjMuNTsaDIATXmhBEOJTHY6dgY5FEAtTCUelT0yJVFfr8XgPqFSAqxKrOcrB3vgf4Xut9nV2rbnYn8XyEY7b8UPChJQGXa88954pJ34HAtUYfwVMUbIz47Wgr0CAWekcmeGL8PE2oKPcdJ4Bg150tBt4K53AQFrpf8dLo7X7cwjX4YINXosUCxWe2ojaKtjHD6a3jiRdhtPlY8uFdqtRsMV65pIFZUXVxY9yGvuf7op0ASNC2XrUGaJQqUOC",
+  "id": "a12c5a8a-0288-4502-9190-5ddf79145938",
+  "secret": "N3MXICwdkqIbbkhociXxtZJ8HGu4EpHKT7X7IA6M08P1m3px7aIfBDnfdStUfjArJGqQIoWtH4my5XtkZJso9SHSuOlkhcnIqfB8zj6PqVoXbqjt6svPaCtmDR0qiCZq0g8FfqAikI5DbUkKY2LomIwLjx3Qhe7nzuOZgeap4rDU959tHqYpaD11Yvgjk2SfRXZpdkcEURMhsLVvX7AXgsbylaVyy52iwsF8nSNfjtMXenDQhj1Jxr0WlZHisQNQ",
   "redirect": "http://localhost:4000/login"
 }
 ```
