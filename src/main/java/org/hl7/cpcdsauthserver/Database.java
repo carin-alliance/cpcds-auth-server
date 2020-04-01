@@ -183,7 +183,7 @@ public class Database {
      * @param constraintParams - the search constraints for the SQL query.
      * @return User
      */
-    public User readUser(Map<String, Object> constraintParams) {
+    private User readUser(Map<String, Object> constraintParams) {
         logger.info("Database::read(Users, " + constraintParams.toString() + ")");
         User result = null;
         if (constraintParams != null) {
@@ -310,7 +310,7 @@ public class Database {
      * @param data             - map of column to value for the SQL SET clause
      * @return boolean - whether or not the update was successful
      */
-    public boolean update(Map<String, Object> constraintParams, Map<String, Object> data) {
+    private boolean update(Map<String, Object> constraintParams, Map<String, Object> data) {
         logger.info("Database::update(Users WHERE " + constraintParams.toString() + ", SET" + data.toString() + ")");
         boolean result = false;
         if (constraintParams != null && data != null) {
