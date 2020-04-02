@@ -18,6 +18,7 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +42,14 @@ public class AuthorizationEndpoint {
       @RequestParam(name = "client_id") String clientId, @RequestParam(name = "redirect_uri") String redirectURI,
       @RequestParam(name = "scope") String scope, @RequestParam(name = "state") String state,
       @RequestParam(name = "aud") String aud) {
+    // Escape all the query parameters
+    aud = StringEscapeUtils.escapeJava(aud);
+    scope = StringEscapeUtils.escapeJava(scope);
+    state = StringEscapeUtils.escapeJava(state);
+    clientId = StringEscapeUtils.escapeJava(clientId);
+    redirectURI = StringEscapeUtils.escapeJava(redirectURI);
+    responseType = StringEscapeUtils.escapeJava(responseType);
+
     logger.info(
         "AuthorizationEndpoint::Authorization:Received /authorization?response_type=" + responseType + "&client_id="
             + clientId + "&redirect_uri=" + redirectURI + "&scope=" + scope + "&state=" + state + "&aud=" + aud);
@@ -54,6 +63,14 @@ public class AuthorizationEndpoint {
       @RequestParam(name = "response_type") String responseType, @RequestParam(name = "client_id") String clientId,
       @RequestParam(name = "redirect_uri") String redirectURI, @RequestParam(name = "scope") String scope,
       @RequestParam(name = "state") String state, @RequestParam(name = "aud") String aud) {
+    // Escape all the query parameters
+    aud = StringEscapeUtils.escapeJava(aud);
+    scope = StringEscapeUtils.escapeJava(scope);
+    state = StringEscapeUtils.escapeJava(state);
+    clientId = StringEscapeUtils.escapeJava(clientId);
+    redirectURI = StringEscapeUtils.escapeJava(redirectURI);
+    responseType = StringEscapeUtils.escapeJava(responseType);
+
     logger.info(
         "AuthorizationEndpoint::Authorization:Received /authorization?response_type=" + responseType + "&client_id="
             + clientId + "&redirect_uri=" + redirectURI + "&scope=" + scope + "&state=" + state + "&aud=" + aud);

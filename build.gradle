@@ -30,6 +30,7 @@ dependencies {
     compile 'org.webjars:jquery:3.1.0'
     compile 'com.squareup.okhttp3:okhttp:3.14.1'
     compile group: 'org.springframework.security', name: 'spring-security-crypto', version: '3.1.0.RELEASE'
+    compile group: 'org.apache.commons', name: 'commons-text', version: '1.8'
 
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'com.google.guava:guava:27.0.1-jre'

@@ -11,6 +11,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +30,7 @@ public class RegisterEndpoint {
     @RequestMapping(value = "/user", method = RequestMethod.POST, consumes = { "application/json" })
     public ResponseEntity<String> RegisterUser(HttpServletRequest request, HttpEntity<String> entity) {
         logger.info("RegisterEndpoint::Register: /register/user");
-        logger.log(Level.FINE, entity.getBody());
+        logger.log(Level.FINE, StringEscapeUtils.escapeJava(entity.getBody()));
 
         try {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -57,8 +58,11 @@ public class RegisterEndpoint {
     @RequestMapping(value = "/client", method = RequestMethod.POST)
     public ResponseEntity<String> RegisterClient(HttpServletRequest request, HttpEntity<String> entity,
             @RequestParam(name = "redirect_uri") String redirectUri) {
+        // Escape all the query parameters
+        redirectUri = StringEscapeUtils.escapeJava(redirectUri);
+
         logger.info("RegisterEndpoint::Register: /register/client");
-        logger.log(Level.FINE, entity.getBody());
+        logger.log(Level.FINE, "RegisterClient:RedirectURI:" + redirectUri);
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
