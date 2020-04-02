@@ -3,6 +3,8 @@ package org.hl7.cpcdsauthserver;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 public class User {
 
     private String username;
@@ -20,9 +22,16 @@ public class User {
     }
 
     public User(String username, String password, String patientId, String createdDate, String refreshToken) {
+        // Escape all the inputs (since it could be from the browser)
+        username = StringEscapeUtils.escapeJava(username);
+        password = StringEscapeUtils.escapeJava(password);
+        patientId = StringEscapeUtils.escapeJava(patientId);
+        createdDate = StringEscapeUtils.escapeJava(createdDate);
+        refreshToken = StringEscapeUtils.escapeJava(refreshToken);
+
+        this.username = username;
         this.password = password;
         this.patientId = patientId;
-        this.username = username;
         this.createdDate = createdDate;
         this.refreshToken = refreshToken;
     }

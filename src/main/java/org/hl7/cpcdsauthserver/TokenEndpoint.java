@@ -25,6 +25,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -55,6 +56,11 @@ public class TokenEndpoint {
     @PostMapping(value = "", params = { "grant_type", "code", "redirect_uri" })
     public ResponseEntity<String> Token(HttpServletRequest request, @RequestParam(name = "grant_type") String grantType,
             @RequestParam(name = "code") String code, @RequestParam(name = "redirect_uri") String redirectURI) {
+        // Escape all the query parameters
+        code = StringEscapeUtils.escapeJava(code);
+        grantType = StringEscapeUtils.escapeJava(grantType);
+        redirectURI = StringEscapeUtils.escapeJava(redirectURI);
+
         logger.info("TokenEndpoint::Token:Received request /token?grant_type=" + grantType + "&code=" + code
                 + "&redirect_uri=" + redirectURI);
         return processRequest(request, grantType, code, redirectURI);
@@ -63,6 +69,10 @@ public class TokenEndpoint {
     @PostMapping(value = "", params = { "grant_type", "refresh_token" })
     public ResponseEntity<String> Token(HttpServletRequest request, @RequestParam(name = "grant_type") String grantType,
             @RequestParam(name = "refresh_token") String refreshToken) {
+        // Escape all the query parameters
+        grantType = StringEscapeUtils.escapeJava(grantType);
+        refreshToken = StringEscapeUtils.escapeJava(refreshToken);
+
         logger.info("TokenEndpoint::RefreshToken:Received request /token?grant_type=" + grantType + "&refresh_token="
                 + refreshToken);
         return processRequest(request, grantType, refreshToken, null);
