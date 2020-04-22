@@ -2,6 +2,8 @@
 
 This project is the authorization server for the [CPCDS Reference Server](https://github.com/carin-alliance/cpcds-server-ri). It supports authorization using OAuth 2.0 in the stand alone SMART app launch sequence.
 
+Note: This is a reference implementation and is intended only to test the CPCDS Server and the CPCDS Client implementations. This authorization server purposefully enables data to be publicly accessible to assist in debugging. Caution should be taken if attempting to use this implementation in a production enviornment. All data sent to the server should be fictional.
+
 ## Quickstart
 
 The quickest way to get the server up and running is by pulling the built image from docker hub.
@@ -199,6 +201,18 @@ Retuns:
   ]
 }
 ```
+
+## Debug Endpoints
+
+To enable debugging while using this reference implementation three debug endpoints are enabled. These endpoints publicly expose data which is useful for development but should be kept private for a real instance.
+
+### GET /debug/Users
+
+Returns a readonly webpage user interface for the Users table in the database. Columns are USERNAME, PATIENT_ID, PASSWORD, REFRESH_TOKEN, and TIMESTAMP.
+
+### GET /debug/Clients
+
+Returns a readonly webpage user interface for the registered Clients table in the database. Columns are ID, SECRET, REDIRECT_URI, and TIMESTAMP.
 
 ## JWT Token Structure
 
