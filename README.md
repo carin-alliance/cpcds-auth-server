@@ -214,6 +214,10 @@ Returns a readonly webpage user interface for the Users table in the database. C
 
 Returns a readonly webpage user interface for the registered Clients table in the database. Columns are ID, SECRET, REDIRECT_URI, and TIMESTAMP.
 
+### GET /debug/Log
+
+Returns the contents of the log file for the server.
+
 ## JWT Token Structure
 
 JWT tokens are used throughout this process to digitally sign the Authorization Code and the Access Token. All JWT tokens in this reference implementation utilize the HS256 algorithm. The structure of the payload for the two types of tokens are shown below:
