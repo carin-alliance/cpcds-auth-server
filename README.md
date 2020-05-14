@@ -85,6 +85,10 @@ Content-Type: application/json
 
 The response to the POST is 201 CREATED on success.
 
+### GET /register/user
+
+A web interface is available to register a new user.
+
 ### POST /register/client
 
 Before the authorization sequence can begin the client must be registered with the system. The endpoint for this is `/register/client` and the query parameters are:
@@ -108,6 +112,10 @@ The response to the post is 201 CREATED on success with the json body:
   "redirect": "http://localhost:4000/login"
 }
 ```
+
+### GET /register/client
+
+A web interface is available to register a new client.
 
 ### GET /authorization
 
