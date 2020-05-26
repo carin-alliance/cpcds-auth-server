@@ -2,7 +2,7 @@
 
 This project is the authorization server for the [CPCDS Reference Server](https://github.com/carin-alliance/cpcds-server-ri). It supports authorization using OAuth 2.0 in the stand alone SMART app launch sequence.
 
-Note: This is a reference implementation and is intended only to test the CPCDS Server and the CPCDS Client implementations. This authorization server purposefully enables data to be publicly accessible to assist in debugging. Caution should be taken if attempting to use this implementation in a production enviornment. All data sent to the server should be fictional.
+Note: This is a reference implementation and is intended only to test the CPCDS Server and the CPCDS Client implementations. This authorization server purposefully enables data to be publicly accessible to assist in debugging. Caution should be taken if attempting to use this implementation in a production enviornment. All data sent to the server should be fictional. For more details see "Security" at the bottom of this page.
 
 ## Quickstart
 
@@ -261,3 +261,13 @@ JWT tokens are used throughout this process to digitally sign the Authorization 
 ## Configuration
 
 The auth server must know the EHR Server endpoint to validate the audience. This can be configured in `App.java` by changing the value of `ehrServer`.
+
+## Security
+
+Since this code base serves as the reference implementation for the Carin BB IG there are multiple places where potential security vulnerabilities were intentionally made to allow testing developers to debug their code. With these vulnerabilities in place, testing and debugging connections is substantially easier. If this code is to be used for a production enviornment care must be taken to ensure all vulnerabilities are fixed. Below is a list of _some_ of the identified issues. It is your responsibility to make sure all vulnerabilities, including those not listed below, are fixed in a production enviornment.
+
+1. Logger statements print secrets - in places such as `User.java` and `Client.java` the logger displays the hashed password and client secret. Caution should be used any time a secret value is logged. Care should be taken to protect the log files from malicious users.
+2. Debug endpoint - the debug endpoint provides public access to the Users and Client table which provides hashed passwords and client secrets. This endpoint also provides public access to the log file. The debug endpoint should be removed for a production enviornment.
+3. Managing keys - the RSA keys used to sign and validate the JWT tokens are hard coded in `App.java`. Your implementation must change these keys and ensure they are stored in a secure location. Consider having rotating keys.
+
+This may not be an exhaustive list. The developers of this reference implementations are not responsible for any vulnerabilities in the code base. All use of this repository comes with the understanding this reference implementation is used for testing connections only.
