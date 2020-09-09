@@ -232,7 +232,7 @@ JWT tokens are used throughout this process to digitally sign the Authorization 
 
 ### Authorization Code Payload Structure
 
-```json
+```
 {
   "aud": "http://localhost:8180", // Audience is the this auth server
   "iss": "http://localhost:8180", // Issued by this auth server URL
@@ -246,7 +246,7 @@ JWT tokens are used throughout this process to digitally sign the Authorization 
 
 ### Access Token Payload Structure
 
-```json
+```
 {
   "aud": "http://localhost:8080/cpcds-server/fhir", // Audience is the protected CPCDS server
   "iss": "http://localhost:8180", // Issued by this auth server URL
@@ -260,7 +260,7 @@ JWT tokens are used throughout this process to digitally sign the Authorization 
 
 ## Configuration
 
-The auth server must know the EHR Server endpoint to validate the audience. This can be configured in `App.java` by changing the value of `ehrServer`.
+The auth server must know the EHR Server endpoint to validate the audience. This can be configured in `App.java` by changing the value of `ehrServer`. The default value is the same base url as this auth server with `:8080/cpcds-server/fhir` as the endpoint.
 
 ## Security
 

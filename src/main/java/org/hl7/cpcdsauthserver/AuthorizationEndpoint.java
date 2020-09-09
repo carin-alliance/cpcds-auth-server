@@ -79,7 +79,7 @@ public class AuthorizationEndpoint {
     HashMap<String, String> attributes = new HashMap<String, String>();
 
     HttpStatus status = HttpStatus.OK;
-    if (!aud.equals(App.getEhrServer())) {
+    if (!aud.equals(App.getEhrServer(request))) {
       status = HttpStatus.BAD_REQUEST;
       attributes.put("error", "invalid_request");
       attributes.put("error_description", "aud is invalid");

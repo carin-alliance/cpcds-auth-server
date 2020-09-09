@@ -22,9 +22,7 @@ public class App {
 	private static RSAPublicKey publicKey;
 	private static RSAPrivateKey privateKey;
 	private static final Logger logger = ServerLogger.getLogger();
-	// private static final String ehrServer =
-	// "http://localhost:8080/cpcds-server/fhir";
-	private static final String ehrServer = "http://ec2-3-17-26-132.us-east-2.compute.amazonaws.com:8080/cpcds-server/fhir";
+	private static final String ehrServer = ":8080/cpcds-server/fhir";
 	private static final String keyId = "NjVBRjY5MDlCMUIwNzU4RTA2QzZFMDQ4QzQ2MDAyQjVDNjk1RTM2Qg";
 
 	public static void main(String[] args) throws NoSuchAlgorithmException, InvalidKeySpecException {
@@ -87,8 +85,8 @@ public class App {
 		return App.privateKey;
 	}
 
-	public static String getEhrServer() {
-		return App.ehrServer;
+	public static String getEhrServer(HttpServletRequest request) {
+		return request.getScheme() + "://" + request.getServerName() + App.ehrServer;
 	}
 
 	/**

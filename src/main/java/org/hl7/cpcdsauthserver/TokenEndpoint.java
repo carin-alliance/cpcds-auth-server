@@ -116,7 +116,7 @@ public class TokenEndpoint {
         logger.log(Level.FINE, "TokenEndpoint::Token:Patient:" + patientId);
         if (patientId != null) {
             String accessToken = generateToken(token, baseUrl, clientId, patientId, UUID.randomUUID().toString(),
-                    TokenType.ACCESS);
+                    TokenType.ACCESS, request);
             logger.log(Level.FINE, "TokenEndpoint::Token:Generated token " + accessToken);
             if (accessToken != null) {
                 String jwtId = UUID.randomUUID().toString();
@@ -126,7 +126,7 @@ public class TokenEndpoint {
                 response.put("patient", patientId);
                 response.put("scope", "patient/*.read");
                 response.put("refresh_token",
-                        generateToken(token, baseUrl, clientId, patientId, jwtId, TokenType.REFRESH));
+                        generateToken(token, baseUrl, clientId, patientId, jwtId, TokenType.REFRESH, request));
                 App.getDB().setRefreshTokenId(patientId, jwtId);
                 return new ResponseEntity<String>(gson.toJson(response), headers, HttpStatus.OK);
             } else {
@@ -188,11 +188,11 @@ public class TokenEndpoint {
      * @return access token for granted user or null
      */
     private String generateToken(String code, String baseUrl, String clientId, String patientId, String jwtId,
-            TokenType tokenType) {
+            TokenType tokenType, HttpServletRequest request) {
         try {
             // Create the access token JWT
             Algorithm algorithm = Algorithm.RSA256(App.getPublicKey(), App.getPrivateKey());
-            String aud = tokenType == TokenType.ACCESS ? App.getEhrServer() : baseUrl;
+            String aud = tokenType == TokenType.ACCESS ? App.getEhrServer(request) : baseUrl;
             Instant exp = tokenType == TokenType.ACCESS
                     ? LocalDateTime.now().plusHours(1).atZone(ZoneId.systemDefault()).toInstant()
                     : LocalDateTime.now().plusDays(30).atZone(ZoneId.systemDefault()).toInstant();
