@@ -42,7 +42,7 @@ public class App {
 
 		// Add default Clients and Users
 		Client heroku = new Client("6cfecf41-e364-44ab-a06f-77f8b0c56c2b", "XHNdbHQlOrWXQ8eeXHvZal1EDjI3n2ISlqhtP30Zc89Ad2NuzreoorWQ5P8dPrxtk267SJ23mbxlMzjriAGgkaTnm6Y9f1cOas4Z6xhWXxG43bkIKHhawMR6gGDXAuEWc8wXUHteZIi4YCX6E1qAvGdsXS1KBhkUf1CLcGmauhbCMd73CjMugT527mpLnIebuTp4LYDiJag0usCE6B6fYuTWV21AbvydLnLsMsk83T7aobE4p9R0upL2Ph3OFTE1", "https://cpcds-client-ri.herokuapp.com/login");
-		Client localhost = new Client("b0c46635-c0b4-448c-a8b9-9bd282d2e05a", "bUYbEj5wpazS8Xv1jyruFKpuXa24OGn9MHuZ3ygKexaI5mhKUIzVEBvbv2uggVf1cW6kYD3cgTbCIGK3kjiMcmJq3OG9bn85Fh2x7JKYgy7Jwagdzs0qufgkhPGDvEoVpImpA4clIhfwn58qoTrfHx86ooWLWJeQh4s0StEMqoxLqboywr8u11qmMHd1xwBLehGXUbqpEBlkelBHDWaiCjkhwZeRe4nVu4o8wSAbPQIECQcTjqYBUrBjHlMx5vXU", "http://localhost:4000/login	2020-04-02 ");
+		Client localhost = new Client("b0c46635-c0b4-448c-a8b9-9bd282d2e05a", "bUYbEj5wpazS8Xv1jyruFKpuXa24OGn9MHuZ3ygKexaI5mhKUIzVEBvbv2uggVf1cW6kYD3cgTbCIGK3kjiMcmJq3OG9bn85Fh2x7JKYgy7Jwagdzs0qufgkhPGDvEoVpImpA4clIhfwn58qoTrfHx86ooWLWJeQh4s0StEMqoxLqboywr8u11qmMHd1xwBLehGXUbqpEBlkelBHDWaiCjkhwZeRe4nVu4o8wSAbPQIECQcTjqYBUrBjHlMx5vXU", "http://localhost:4000/login");
 		User user1 = new User("user1", BCrypt.hashpw("password1", BCrypt.gensalt()), "1");
 		User user689 = new User("user689", BCrypt.hashpw("password689", BCrypt.gensalt()), "689");
 		User patient1 = new User("patient1", BCrypt.hashpw("password1", BCrypt.gensalt()), "Patient1");
