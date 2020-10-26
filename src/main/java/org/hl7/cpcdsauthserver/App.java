@@ -22,7 +22,7 @@ public class App {
 	private static RSAPublicKey publicKey;
 	private static RSAPrivateKey privateKey;
 	private static final Logger logger = ServerLogger.getLogger();
-	private static final String ehrServer = ":8080/cpcds-server/fhir";
+	private static final String ehrServer = "http://ec2-18-217-72-168.us-east-2.compute.amazonaws.com:8080/cpcds-server/fhir";
 	private static final String keyId = "NjVBRjY5MDlCMUIwNzU4RTA2QzZFMDQ4QzQ2MDAyQjVDNjk1RTM2Qg";
 
 	public static void main(String[] args) throws NoSuchAlgorithmException, InvalidKeySpecException {
@@ -38,6 +38,23 @@ public class App {
 	private static void initializeDB() {
 		if (DB == null)
 			DB = new Database();
+
+		// Add default Clients and Users
+		Client heroku = new Client("6cfecf41-e364-44ab-a06f-77f8b0c56c2b", "XHNdbHQlOrWXQ8eeXHvZal1EDjI3n2ISlqhtP30Zc89Ad2NuzreoorWQ5P8dPrxtk267SJ23mbxlMzjriAGgkaTnm6Y9f1cOas4Z6xhWXxG43bkIKHhawMR6gGDXAuEWc8wXUHteZIi4YCX6E1qAvGdsXS1KBhkUf1CLcGmauhbCMd73CjMugT527mpLnIebuTp4LYDiJag0usCE6B6fYuTWV21AbvydLnLsMsk83T7aobE4p9R0upL2Ph3OFTE1", "https://cpcds-client-ri.herokuapp.com/login");
+		Client localhost = new Client("b0c46635-c0b4-448c-a8b9-9bd282d2e05a", "bUYbEj5wpazS8Xv1jyruFKpuXa24OGn9MHuZ3ygKexaI5mhKUIzVEBvbv2uggVf1cW6kYD3cgTbCIGK3kjiMcmJq3OG9bn85Fh2x7JKYgy7Jwagdzs0qufgkhPGDvEoVpImpA4clIhfwn58qoTrfHx86ooWLWJeQh4s0StEMqoxLqboywr8u11qmMHd1xwBLehGXUbqpEBlkelBHDWaiCjkhwZeRe4nVu4o8wSAbPQIECQcTjqYBUrBjHlMx5vXU", "http://localhost:4000/login	2020-04-02 ");
+		User user1 = new User("user1", "password1", "1");
+		User user689 = new User("user689", "password689", "689");
+		User patient1 = new User("patient1", "password1", "Patient1");
+		User patientex1 = new User("patientex1", "passwordex1", "PatientEx1");
+		User admin = new User("admin", "123456789", "admin");
+
+		DB.write(heroku);
+		DB.write(localhost);
+		DB.write(user1);
+		DB.write(user689);
+		DB.write(patient1);
+		DB.write(patientex1);
+		DB.write(admin);
 	}
 
 	private static void initializeRSAKeys() throws NoSuchAlgorithmException, InvalidKeySpecException {
@@ -86,7 +103,7 @@ public class App {
 	}
 
 	public static String getEhrServer(HttpServletRequest request) {
-		return request.getScheme() + "://" + request.getServerName() + App.ehrServer;
+		return App.ehrServer;
 	}
 
 	/**
