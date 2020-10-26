@@ -17,17 +17,26 @@ docker run -p 8180:8180 blangley/cpcds-auth-server
 
 This will deploy the authorization server to http://localhost:8180.
 
-Note: This image includes a copy of the database with preloaded users
-| ID | Username | Password |
-|----|----------|----------|
-| 1 | user1 | password1|
-| 689 | user689 | password689 |
-| admin | admin | 123456789
+## Preloaded Users and Clients
 
-Note: This image includes a copy of the database with preloaded clients
-| ID | RedirectURI | Secret |
-|----|-------------|--------|
-| b0c46635-c0b4-448c-a8b9-9bd282d2e05a | http://localhost:4000/login | bUYbEj5wpazS8Xv1jyruFKpuXa24OGn9MHuZ3ygKexaI5mhKUIzVEBvbv2uggVf1cW6kYD3cgTbCIGK3kjiMcmJq3OG9bn85Fh2x7JKYgy7Jwagdzs0qufgkhPGDvEoVpImpA4clIhfwn58qoTrfHx86ooWLWJeQh4s0StEMqoxLqboywr8u11qmMHd1xwBLehGXUbqpEBlkelBHDWaiCjkhwZeRe4nVu4o8wSAbPQIECQcTjqYBUrBjHlMx5vXU
+The server will automatically include the following Users and Clients when it starts up.
+
+### Users
+
+| ID         | Username   | Password    | Description                                                |
+| ---------- | ---------- | ----------- | ---------------------------------------------------------- |
+| 1          | user1      | password1   | Account for `Patient/1` from Synthea generated data        |
+| 689        | user689    | password689 | Account for `Patient/689` from Synthea generated data      |
+| Patient1   | patient1   | password1   | Account for `Patient/Patient1` from IG Examples            |
+| PatientEx1 | patientex1 | passwordex1 | Account for `Patient/PatientEx1` from IG Examples          |
+| admin      | admin      | 123456789   | Admin account which can access all resources on the server |
+
+### Clients
+
+| ID                                   | RedirectURI                                 | Secret                                                                                                                                                                                                                                                           |
+| ------------------------------------ | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| b0c46635-c0b4-448c-a8b9-9bd282d2e05a | http://localhost:4000/login                 | bUYbEj5wpazS8Xv1jyruFKpuXa24OGn9MHuZ3ygKexaI5mhKUIzVEBvbv2uggVf1cW6kYD3cgTbCIGK3kjiMcmJq3OG9bn85Fh2x7JKYgy7Jwagdzs0qufgkhPGDvEoVpImpA4clIhfwn58qoTrfHx86ooWLWJeQh4s0StEMqoxLqboywr8u11qmMHd1xwBLehGXUbqpEBlkelBHDWaiCjkhwZeRe4nVu4o8wSAbPQIECQcTjqYBUrBjHlMx5vXU |
+| 6cfecf41-e364-44ab-a06f-77f8b0c56c2b | https://cpcds-client-ri.herokuapp.com/login | XHNdbHQlOrWXQ8eeXHvZal1EDjI3n2ISlqhtP30Zc89Ad2NuzreoorWQ5P8dPrxtk267SJ23mbxlMzjriAGgkaTnm6Y9f1cOas4Z6xhWXxG43bkIKHhawMR6gGDXAuEWc8wXUHteZIi4YCX6E1qAvGdsXS1KBhkUf1CLcGmauhbCMd73CjMugT527mpLnIebuTp4LYDiJag0usCE6B6fYuTWV21AbvydLnLsMsk83T7aobE4p9R0upL2Ph3OFTE1 |
 
 ## Building locally with Docker
 
