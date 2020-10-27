@@ -2,7 +2,7 @@
 
 This project is the authorization server for the [CPCDS Reference Server](https://github.com/carin-alliance/cpcds-server-ri). It supports authorization using OAuth 2.0 in the stand alone SMART app launch sequence.
 
-This server is deployed at http://ec2-18-221-169-54.us-east-2.compute.amazonaws.com:8180/
+This server is deployed at http://ec2-18-217-222-36.us-east-2.compute.amazonaws.com:8180/
 
 Note: This is a reference implementation and is intended only to test the CPCDS Server and the CPCDS Client implementations. This authorization server purposefully enables data to be publicly accessible to assist in debugging. Caution should be taken if attempting to use this implementation in a production enviornment. All data sent to the server should be fictional. For more details see "Security" at the bottom of this page.
 
