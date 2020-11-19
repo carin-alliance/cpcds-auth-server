@@ -1,5 +1,7 @@
 # CPCDS Authorization Server
 
+ATTN: This server is now deprecated. Please see the ca.uhn.fhir.jpa.starter.authorization in the [CPCDS Server RI github](https://github.com/carin-alliance/cpcds-server-ri)
+
 This project is the authorization server for the [CPCDS Reference Server](https://github.com/carin-alliance/cpcds-server-ri). It supports authorization using OAuth 2.0 in the stand alone SMART app launch sequence.
 
 This server is deployed at http://ec2-18-221-69-59.us-east-2.compute.amazonaws.com:8080/
